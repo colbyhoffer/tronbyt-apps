@@ -235,7 +235,7 @@ def year_range(setlists):
     lo, hi = min(years), max(years)
     if lo == hi:
         return hi
-    return "%s-%s" % (lo[2:], hi[2:])
+    return "'%s-'%s" % (lo[2:], hi[2:])
 
 # ---------------------------------------------------------------------------
 # Rendering
