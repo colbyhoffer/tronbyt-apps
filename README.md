@@ -18,10 +18,24 @@ Modes:
 Setup: get a free API key at [setlist.fm/settings/apps](https://www.setlist.fm/settings/apps),
 then enter it with your setlist.fm username (or an artist name) in the app settings.
 
+### TCEQ Refinery Alerts (`apps/tceq_alerts`)
+
+Watches the [TCEQ Air Emission Event Report RSS feed](https://www2.tceq.texas.gov/oce/eer/RSSDataFeed.xml)
+and shows the events whose title contains a keyword (default `REFINERY`). Each render shows one
+matching event and rotates to the next on the following render: facility name, county + start time,
+and status + cause (pulled from the event's detail page and cached).
+
+Options: keyword, max age (1/2/3 days or the whole ~7-day feed), fetch details on/off,
+hide the app when there are no matches, scroll speed, accent color, demo mode.
+
+No API key needed.
+
 ## Development
+
 
 ```
 pixlet serve apps/setlist/setlist.star
+pixlet serve apps/tceq_alerts/tceq_alerts.star
 ```
 
 Renders live at http://localhost:8080 with a config form.
