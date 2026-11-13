@@ -1,0 +1,11 @@
+id: setlist
+name: Setlist Tracker
+summary: Concert setlists
+desc: Shows a concert setlist from setlist.fm - your most recently attended show or any artist's latest setlist. Requires a free setlist.fm API key (setlist.fm/settings/apps).
+author: colbyhoffer
+fileName: setlist.star
+packageName: setlist
+category: entertainment
+tags:
+  - music
+  - concerts
