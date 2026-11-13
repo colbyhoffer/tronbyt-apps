@@ -224,19 +224,6 @@ def stats_top_songs(setlists):
         names.extend(extract_songs(sl))
     return top_counts(names)
 
-def year_range(setlists):
-    years = []
-    for sl in setlists:
-        _, _, y = parse_date(sl.get("eventDate", ""))
-        if y:
-            years.append(y)
-    if len(years) == 0:
-        return ""
-    lo, hi = min(years), max(years)
-    if lo == hi:
-        return hi
-    return "'%s-'%s" % (lo[2:], hi[2:])
-
 # ---------------------------------------------------------------------------
 # Rendering
 # ---------------------------------------------------------------------------
@@ -486,14 +473,15 @@ def ranked_rows(entries):
 def recent_rows(setlists):
     rows = []
     for sl in setlists[:STATS_TOP_N]:
-        month, day, _ = parse_date(sl.get("eventDate", ""))
+        _, _, year = parse_date(sl.get("eventDate", ""))
+        yy = "'" + year[2:] if len(year) == 4 else year
         name = sl.get("artist", {}).get("name", "")
-        if len(name) > 10:
-            name = name[:9] + "."
+        if len(name) > 11:
+            name = name[:10] + "."
         rows.append(
             render.Row(
                 children = [
-                    render.Text("%s%s " % (month, day), font = "tom-thumb", color = "#ffb300"),
+                    render.Text(yy + " ", font = "tom-thumb", color = "#ffb300"),
                     render.Text(name.upper(), font = "tom-thumb", color = "#ffffff"),
                 ],
             ),
@@ -508,7 +496,7 @@ def render_stats_view(mode, setlists, accent, delay):
         return render_stats_list("TOP VENUES", n_shows, ranked_rows(stats_top_venues(setlists)), accent, delay)
     elif mode == "top_songs":
         return render_stats_list("TOP SONGS", n_shows, ranked_rows(stats_top_songs(setlists)), accent, delay)
-    return render_stats_list("RECENT", year_range(setlists), recent_rows(setlists), accent, delay)
+    return render_stats_list("RECENT CONCERTS", "", recent_rows(setlists), accent, delay)
 
 def render_layout(layout, info, accent, show_songs, delay):
     if layout == "tracklist":
@@ -538,7 +526,7 @@ def main(config):
         if mode in stats_modes:
             demo_entries = [("Wilco", 12), ("LCD Soundsystem", 9), ("Mitski", 7), ("Spoon", 6), ("Khruangbin", 4)]
             if mode == "recent":
-                return render_stats_list("RECENT", "24-26", ranked_rows(demo_entries), accent, delay)
+                return render_stats_list("RECENT CONCERTS", "", ranked_rows(demo_entries), accent, delay)
             return render_stats_list("TOP ARTISTS", "87", ranked_rows(demo_entries), accent, delay)
         info = {
             "artist": DEMO["artist"],
