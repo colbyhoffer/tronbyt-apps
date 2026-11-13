@@ -1,0 +1,12 @@
+id: readwise_quote
+name: Readwise Quote
+summary: Readwise highlight of the day
+desc: Shows one of your Readwise highlights with its book title and author. Pull from today's Daily Review or your whole library, same quote all day or a new one each render. Requires a Readwise access token (readwise.io/access_token).
+author: colbyhoffer
+fileName: readwise_quote.star
+packageName: readwise_quote
+category: lifestyle
+tags:
+  - books
+  - quotes
+  - readwise

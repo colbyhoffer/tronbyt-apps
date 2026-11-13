@@ -33,12 +33,34 @@ hide the app when there are no matches, scroll speed, accent color, demo mode.
 
 No API key needed.
 
+### Readwise Quote (`apps/readwise_quote`)
+
+Shows one of your [Readwise](https://readwise.io) highlights: the quote wrapped and scrolling
+vertically, followed by the book title and author. Short quotes sit still; long ones roll through.
+
+Sources:
+
+- **Today's Daily Review** — the highlights Readwise picked for today's review
+- **Whole library** — every highlight in your account (export endpoint, cached 6 h)
+
+Pick: **same quote all day** (seeded from the date in your device's timezone) or
+**next quote each render**.
+
+Layouts: **Logo + scroll** (hand-drawn 16x16 pixel Readwise mark in the left column, default),
+**Header + scroll** (7x7 mark + READWISE wordmark over a rule), or **Full screen**. The marks are
+drawn from `render.Box` runs so they follow the accent color.
+Options: max quote length, scroll speed, accent color. Demo quote when no token is set.
+
+Setup: copy your token from [readwise.io/access_token](https://readwise.io/access_token)
+and paste it into the app settings.
+
 ## Development
 
 
 ```
 pixlet serve apps/setlist/setlist.star
 pixlet serve apps/tceq_alerts/tceq_alerts.star
+pixlet serve apps/readwise_quote/readwise_quote.star
 ```
 
 Renders live at http://localhost:8080 with a config form.
