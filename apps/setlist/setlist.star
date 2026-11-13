@@ -9,6 +9,13 @@ Two modes:
     on your setlist.fm account
   - "Artist's latest setlist": the newest setlist for any artist
 
+Three layouts:
+  - "Ticket Stub": date block + perforation on the left, artist,
+    venue and a song ticker on the right
+  - "Tracklist": artist header bar over a vertically scrolling
+    numbered song list
+  - "Classic": stacked marquees
+
 SETUP
 -----
 1. Get a free API key at https://www.setlist.fm/settings/apps
@@ -48,7 +55,9 @@ MONTHS = {
 DEMO = {
     "artist": "LCD Soundsystem",
     "venue": "Moody Center · Austin, TX",
-    "date": "Nov 12 2026",
+    "month": "NOV",
+    "day": "12",
+    "year": "2026",
     "songs": [
         "Us v Them",
         "Tribulations",
@@ -103,13 +112,17 @@ def extract_songs(setlist):
                 songs.append(name)
     return songs
 
-def format_date(event_date):
-    """setlist.fm dates are dd-MM-yyyy."""
+def parse_date(event_date):
+    """setlist.fm dates are dd-MM-yyyy -> (month_abbr, day, year)."""
     parts = event_date.split("-")
     if len(parts) != 3:
-        return event_date
+        return ("", event_date, "")
     day, month, year = parts[0], parts[1], parts[2]
-    return "%s %s %s" % (MONTHS.get(month, month), day.lstrip("0") or "0", year)
+    return (
+        MONTHS.get(month, month).upper(),
+        day.lstrip("0") or "0",
+        year,
+    )
 
 def pick_setlist(data):
     """First setlist that has songs; fall back to the newest one."""
@@ -182,15 +195,18 @@ def render_message(title, msg, accent):
         ),
     )
 
-def render_setlist(artist, venue_city, date_line, songs, accent, show_songs):
+def render_classic(info, accent, show_songs):
+    date_line = "%s %s %s" % (info["month"], info["day"], info["year"])
+    if len(info["songs"]) > 0:
+        date_line += " · %d songs" % len(info["songs"])
     children = [
         render.Marquee(
             width = 64,
-            child = render.Text(artist, font = "tb-8", color = accent),
+            child = render.Text(info["artist"], font = "tb-8", color = accent),
         ),
         render.Marquee(
             width = 64,
-            child = render.Text(venue_city, font = "tom-thumb", color = "#ffffff"),
+            child = render.Text(info["venue"], font = "tom-thumb", color = "#ffffff"),
         ),
         render.Marquee(
             width = 64,
@@ -198,7 +214,7 @@ def render_setlist(artist, venue_city, date_line, songs, accent, show_songs):
         ),
     ]
     if show_songs:
-        song_text = " • ".join(songs) if len(songs) > 0 else "No setlist posted yet"
+        song_text = " • ".join(info["songs"]) if len(info["songs"]) > 0 else "No setlist posted yet"
         children.append(
             render.Marquee(
                 width = 64,
@@ -214,6 +230,134 @@ def render_setlist(artist, venue_city, date_line, songs, accent, show_songs):
         ),
     )
 
+def render_ticket(info, accent, show_songs):
+    """Date block left, perforation, artist/venue/songs right."""
+    left = render.Box(
+        width = 17,
+        height = 32,
+        color = accent,
+        child = render.Column(
+            main_align = "center",
+            cross_align = "center",
+            children = [
+                render.Text(info["month"], font = "tom-thumb", color = "#ffe1dc"),
+                render.Text(info["day"], font = "6x13", color = "#ffffff"),
+            ],
+        ),
+    )
+    perforation = render.Column(
+        children = [
+            render.Box(
+                width = 1,
+                height = 2,
+                color = "#555555" if i % 2 == 0 else "#000000",
+            )
+            for i in range(16)
+        ],
+    )
+    right_rows = [
+        render.Marquee(
+            width = 44,
+            child = render.Text(info["artist"], font = "tb-8", color = "#ffffff"),
+        ),
+        render.Marquee(
+            width = 44,
+            child = render.Text(info["venue"], font = "tom-thumb", color = "#999999"),
+        ),
+    ]
+    if show_songs:
+        song_text = " • ".join(info["songs"]) if len(info["songs"]) > 0 else "No setlist posted yet"
+        right_rows.append(
+            render.Marquee(
+                width = 44,
+                child = render.Text(song_text, font = "tom-thumb", color = "#ffb300"),
+            ),
+        )
+    right = render.Padding(
+        pad = (2, 0, 0, 0),
+        child = render.Column(
+            expanded = True,
+            main_align = "space_around",
+            children = right_rows,
+        ),
+    )
+    return render.Root(
+        max_age = 3600,
+        child = render.Row(
+            expanded = True,
+            children = [left, perforation, right],
+        ),
+    )
+
+def render_tracklist(info, accent):
+    """Artist header bar over a vertically scrolling numbered song list."""
+    header = render.Box(
+        width = 64,
+        height = 7,
+        color = accent,
+        child = render.Padding(
+            pad = (1, 1, 1, 0),
+            child = render.Row(
+                expanded = True,
+                main_align = "space_between",
+                children = [
+                    render.Marquee(
+                        width = 35,
+                        child = render.Text(info["artist"], font = "tom-thumb", color = "#ffffff"),
+                    ),
+                    render.Text(
+                        "%s %s" % (info["month"], info["day"]),
+                        font = "tom-thumb",
+                        color = "#ffd9d4",
+                    ),
+                ],
+            ),
+        ),
+    )
+    rows = []
+    for i, name in enumerate(info["songs"]):
+        num = str(i + 1)
+        if len(num) < 2:
+            num = "0" + num
+        if len(name) > 14:
+            name = name[:13] + "."
+        rows.append(
+            render.Row(
+                children = [
+                    render.Text(num + " ", font = "tom-thumb", color = "#ffb300"),
+                    render.Text(name, font = "tom-thumb", color = "#ffffff"),
+                ],
+            ),
+        )
+    if len(rows) == 0:
+        rows.append(render.Text("No setlist yet", font = "tom-thumb", color = "#999999"))
+    else:
+        rows.append(
+            render.Text(
+                "- %d SONGS -" % len(info["songs"]),
+                font = "tom-thumb",
+                color = "#5a5a5a",
+            ),
+        )
+    body = render.Marquee(
+        height = 25,
+        scroll_direction = "vertical",
+        child = render.Column(children = rows),
+    )
+    return render.Root(
+        max_age = 3600,
+        child = render.Column(
+            children = [header, body],
+        ),
+    )
+
+def render_layout(layout, info, accent, show_songs):
+    if layout == "tracklist":
+        return render_tracklist(info, accent)
+    elif layout == "classic":
+        return render_classic(info, accent, show_songs)
+    return render_ticket(info, accent, show_songs)
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -221,6 +365,7 @@ def render_setlist(artist, venue_city, date_line, songs, accent, show_songs):
 def main(config):
     api_key = config.str("api_key", "").strip()
     mode = config.str("mode", "user")
+    layout = config.str("layout", "ticket")
     username = config.str("username", "").strip()
     artist_name = config.str("artist", "").strip()
     accent = config.str("accent", DEFAULT_ACCENT)
@@ -228,15 +373,15 @@ def main(config):
 
     # Demo mode when unconfigured
     if api_key == "":
-        date_line = DEMO["date"] + " · demo"
-        return render_setlist(
-            DEMO["artist"],
-            DEMO["venue"],
-            date_line,
-            DEMO["songs"],
-            accent,
-            show_songs,
-        )
+        info = {
+            "artist": DEMO["artist"],
+            "venue": DEMO["venue"],
+            "month": DEMO["month"],
+            "day": DEMO["day"],
+            "year": DEMO["year"],
+            "songs": DEMO["songs"],
+        }
+        return render_layout(layout, info, accent, show_songs)
 
     if mode == "user":
         if username == "":
@@ -263,12 +408,16 @@ def main(config):
     if region:
         venue_city += ", " + region
 
-    songs = extract_songs(setlist)
-    date_line = format_date(setlist.get("eventDate", ""))
-    if len(songs) > 0:
-        date_line += " · %d songs" % len(songs)
-
-    return render_setlist(artist, venue_city, date_line, songs, accent, show_songs)
+    month, day, year = parse_date(setlist.get("eventDate", ""))
+    info = {
+        "artist": artist,
+        "venue": venue_city,
+        "month": month,
+        "day": day,
+        "year": year,
+        "songs": extract_songs(setlist),
+    }
+    return render_layout(layout, info, accent, show_songs)
 
 # ---------------------------------------------------------------------------
 # Schema
@@ -295,6 +444,18 @@ def get_schema():
                     schema.Option(display = "Artist's latest setlist", value = "artist"),
                 ],
             ),
+            schema.Dropdown(
+                id = "layout",
+                name = "Layout",
+                desc = "How to display it",
+                icon = "tableColumns",
+                default = "ticket",
+                options = [
+                    schema.Option(display = "Ticket Stub", value = "ticket"),
+                    schema.Option(display = "Tracklist", value = "tracklist"),
+                    schema.Option(display = "Classic", value = "classic"),
+                ],
+            ),
             schema.Text(
                 id = "username",
                 name = "setlist.fm Username",
@@ -310,14 +471,14 @@ def get_schema():
             schema.Color(
                 id = "accent",
                 name = "Accent Color",
-                desc = "Artist name color",
+                desc = "Date block / header color",
                 icon = "brush",
                 default = DEFAULT_ACCENT,
             ),
             schema.Toggle(
                 id = "show_songs",
                 name = "Show Songs",
-                desc = "Scroll the full setlist",
+                desc = "Scroll the full setlist (Ticket/Classic layouts)",
                 icon = "listOl",
                 default = True,
             ),
