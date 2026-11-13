@@ -259,7 +259,7 @@ def render_message(title, msg, accent):
         ),
     )
 
-def render_classic(info, accent, show_songs):
+def render_classic(info, accent, show_songs, delay):
     date_line = "%s %s %s" % (info["month"], info["day"], info["year"])
     if len(info["songs"]) > 0:
         date_line += " · %d songs" % len(info["songs"])
@@ -287,6 +287,7 @@ def render_classic(info, accent, show_songs):
         )
     return render.Root(
         max_age = 3600,
+        delay = delay,
         child = render.Column(
             expanded = True,
             main_align = "space_between",
@@ -294,7 +295,7 @@ def render_classic(info, accent, show_songs):
         ),
     )
 
-def render_ticket(info, accent, show_songs):
+def render_ticket(info, accent, show_songs, delay):
     """Date block left, perforation, artist/venue/songs right."""
     left = render.Box(
         width = 17,
@@ -348,13 +349,14 @@ def render_ticket(info, accent, show_songs):
     )
     return render.Root(
         max_age = 3600,
+        delay = delay,
         child = render.Row(
             expanded = True,
             children = [left, perforation, right],
         ),
     )
 
-def render_tracklist(info, accent):
+def render_tracklist(info, accent, delay):
     """Artist header bar over a vertically scrolling numbered song list."""
     header = render.Box(
         width = 64,
@@ -411,6 +413,7 @@ def render_tracklist(info, accent):
     )
     return render.Root(
         max_age = 3600,
+        delay = delay,
         child = render.Column(
             children = [header, body],
         ),
@@ -434,11 +437,12 @@ def stats_header(title, right_text, accent):
         ),
     )
 
-def render_stats_list(title, right_text, rows, accent):
+def render_stats_list(title, right_text, rows, accent, delay):
     if len(rows) == 0:
         rows = [render.Text("No data yet", font = "tom-thumb", color = "#999999")]
     return render.Root(
         max_age = 3600,
+        delay = delay,
         child = render.Column(
             children = [
                 stats_header(title, right_text, accent),
@@ -496,22 +500,22 @@ def recent_rows(setlists):
         )
     return rows
 
-def render_stats_view(mode, setlists, accent):
+def render_stats_view(mode, setlists, accent, delay):
     n_shows = str(len(setlists))
     if mode == "top_artists":
-        return render_stats_list("TOP ARTISTS", n_shows, ranked_rows(stats_top_artists(setlists)), accent)
+        return render_stats_list("TOP ARTISTS", n_shows, ranked_rows(stats_top_artists(setlists)), accent, delay)
     elif mode == "top_venues":
-        return render_stats_list("TOP VENUES", n_shows, ranked_rows(stats_top_venues(setlists)), accent)
+        return render_stats_list("TOP VENUES", n_shows, ranked_rows(stats_top_venues(setlists)), accent, delay)
     elif mode == "top_songs":
-        return render_stats_list("TOP SONGS", n_shows, ranked_rows(stats_top_songs(setlists)), accent)
-    return render_stats_list("RECENT", year_range(setlists), recent_rows(setlists), accent)
+        return render_stats_list("TOP SONGS", n_shows, ranked_rows(stats_top_songs(setlists)), accent, delay)
+    return render_stats_list("RECENT", year_range(setlists), recent_rows(setlists), accent, delay)
 
-def render_layout(layout, info, accent, show_songs):
+def render_layout(layout, info, accent, show_songs, delay):
     if layout == "tracklist":
-        return render_tracklist(info, accent)
+        return render_tracklist(info, accent, delay)
     elif layout == "classic":
-        return render_classic(info, accent, show_songs)
-    return render_ticket(info, accent, show_songs)
+        return render_classic(info, accent, show_songs, delay)
+    return render_ticket(info, accent, show_songs, delay)
 
 # ---------------------------------------------------------------------------
 # Main
@@ -525,6 +529,7 @@ def main(config):
     artist_name = config.str("artist", "").strip()
     accent = config.str("accent", DEFAULT_ACCENT)
     show_songs = config.bool("show_songs", True)
+    delay = int(config.str("speed", "120"))
 
     stats_modes = ["top_artists", "top_venues", "top_songs", "recent"]
 
@@ -533,8 +538,8 @@ def main(config):
         if mode in stats_modes:
             demo_entries = [("Wilco", 12), ("LCD Soundsystem", 9), ("Mitski", 7), ("Spoon", 6), ("Khruangbin", 4)]
             if mode == "recent":
-                return render_stats_list("RECENT", "24-26", ranked_rows(demo_entries), accent)
-            return render_stats_list("TOP ARTISTS", "87", ranked_rows(demo_entries), accent)
+                return render_stats_list("RECENT", "24-26", ranked_rows(demo_entries), accent, delay)
+            return render_stats_list("TOP ARTISTS", "87", ranked_rows(demo_entries), accent, delay)
         info = {
             "artist": DEMO["artist"],
             "venue": DEMO["venue"],
@@ -543,7 +548,7 @@ def main(config):
             "year": DEMO["year"],
             "songs": DEMO["songs"],
         }
-        return render_layout(layout, info, accent, show_songs)
+        return render_layout(layout, info, accent, show_songs, delay)
 
     if mode in stats_modes:
         if username == "":
@@ -551,7 +556,7 @@ def main(config):
         setlists, err = get_attended_history(username, api_key)
         if err != None:
             return render_message("Stats error", err, accent)
-        return render_stats_view(mode, setlists, accent)
+        return render_stats_view(mode, setlists, accent, delay)
 
     if mode == "user":
         if username == "":
@@ -587,7 +592,7 @@ def main(config):
         "year": year,
         "songs": extract_songs(setlist),
     }
-    return render_layout(layout, info, accent, show_songs)
+    return render_layout(layout, info, accent, show_songs, delay)
 
 # ---------------------------------------------------------------------------
 # Schema
@@ -641,6 +646,19 @@ def get_schema():
                 name = "Artist Name",
                 desc = "For 'Artist's latest setlist' mode",
                 icon = "guitar",
+            ),
+            schema.Dropdown(
+                id = "speed",
+                name = "Scroll Speed",
+                desc = "Marquee and list scroll speed",
+                icon = "gauge",
+                default = "120",
+                options = [
+                    schema.Option(display = "Relaxed", value = "160"),
+                    schema.Option(display = "Slow", value = "120"),
+                    schema.Option(display = "Normal", value = "80"),
+                    schema.Option(display = "Fast", value = "50"),
+                ],
             ),
             schema.Color(
                 id = "accent",
