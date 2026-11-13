@@ -12,7 +12,7 @@ render, so a Tronbyt cycling through its apps walks the whole list.
 
 The left 20px is an animated pixel-art refinery (flickering flare);
 the right side shows, per event:
-  - keyword + position in the list (e.g. 2/5)
+  - "TCEQ ALERT" header with a position-indicator underline
   - facility name (from the feed title)
   - county + event start date/time (county from the detail page)
   - status + cause text (from the detail page)
@@ -50,6 +50,8 @@ SPRITE_FRAMES = [
 FLAME_HOLD = 3  # root frames per flame frame
 TEXT_X = SPRITE_W + 1
 TEXT_W = 64 - TEXT_X
+HEADER_FULL = "TCEQ ALERT"
+HEADER_SHORT = "TCEQ"
 
 MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 
@@ -265,7 +267,13 @@ def pips(pos, total, accent):
         kids.append(render.Box(width = seg, height = 1, color = accent if i == pos - 1 else "#2a3fbf"))
     return render.Row(children = kids)
 
-def header(keyword, pos, total, accent):
+def header_text():
+    """tom-thumb is 4px per character (3px glyph + 1px gap)."""
+    if len(HEADER_FULL) * 4 - 1 <= TEXT_W:
+        return HEADER_FULL
+    return HEADER_SHORT
+
+def header(pos, total, accent):
     return render.Column(
         children = [
             render.Box(
@@ -275,7 +283,7 @@ def header(keyword, pos, total, accent):
                     expanded = True,
                     main_align = "start",
                     cross_align = "end",
-                    children = [render.Text(keyword, font = "tom-thumb", color = accent)],
+                    children = [render.Text(header_text(), font = "tom-thumb", color = accent)],
                 ),
             ),
             pips(pos, total, accent),
@@ -301,8 +309,8 @@ def with_sprite(column):
         ],
     )
 
-def render_message(keyword, lines, accent):
-    kids = [header(keyword, 0, 0, accent), render.Box(width = TEXT_W, height = 2)]
+def render_message(lines, accent):
+    kids = [header(0, 0, accent), render.Box(width = TEXT_W, height = 2)]
     for ln in lines:
         kids.append(
             render.Padding(
@@ -312,7 +320,7 @@ def render_message(keyword, lines, accent):
         )
     return render.Root(child = with_sprite(render.Column(children = kids)))
 
-def render_event(ev, keyword, pos, total, accent, delay, show_details):
+def render_event(ev, pos, total, accent, delay, show_details):
     name = ev["name"] or ev.get("title", "?")
 
     meta_parts = []
@@ -339,7 +347,7 @@ def render_event(ev, keyword, pos, total, accent, delay, show_details):
 
     column = render.Column(
         children = [
-            header(keyword, pos, total, accent),
+            header(pos, total, accent),
             render.Box(width = TEXT_W, height = 1),
             render.Box(width = TEXT_W, height = 8, child = marquee(name, "tb-8", "#fff", delay, 8)),
             render.Box(width = TEXT_W, height = 1),
@@ -369,11 +377,11 @@ def main(config):
     demo = config.bool("demo", False)
 
     if demo:
-        return render_event(DEMO_EVENTS[0], keyword, 1, 1, accent, delay, show_details)
+        return render_event(DEMO_EVENTS[0], 1, 1, accent, delay, show_details)
 
     events, err = fetch_feed()
     if err != None:
-        return render_message(keyword, ["TCEQ feed error", err], accent)
+        return render_message(["TCEQ feed error", err], accent)
 
     cutoff = int(time.now().unix) - max_days * 86400 if max_days > 0 else 0
     matches = [
@@ -386,14 +394,14 @@ def main(config):
         if hide_empty:
             return []
         age = "past %d day%s" % (max_days, "" if max_days == 1 else "s") if max_days > 0 else "in feed"
-        return render_message(keyword, ["No events", age], accent)
+        return render_message(["No events", age], accent)
 
     idx = pick_index("tceq_alerts_idx_" + keyword + "_" + str(max_days), len(matches))
     ev = matches[idx]
     if show_details:
         ev = fetch_details(ev)
 
-    return render_event(ev, keyword, idx + 1, len(matches), accent, delay, show_details)
+    return render_event(ev, idx + 1, len(matches), accent, delay, show_details)
 
 def get_schema():
     return schema.Schema(
