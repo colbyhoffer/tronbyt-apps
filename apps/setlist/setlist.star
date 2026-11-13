@@ -34,6 +34,9 @@ load("schema.star", "schema")
 API_BASE = "https://api.setlist.fm/rest/1.0"
 SETLIST_TTL = 1800  # 30 min cache for setlist data
 ARTIST_TTL = 86400  # 24 h cache for artist mbid lookups
+STATS_TTL = 21600  # 6 h cache for attended-history pages
+MAX_STATS_PAGES = 10  # up to 200 concerts of history
+STATS_TOP_N = 10
 
 DEFAULT_ACCENT = "#d23b2e"  # setlist.fm red
 
@@ -174,6 +177,67 @@ def get_artist_setlist(artist_name, api_key):
     return sl, None
 
 # ---------------------------------------------------------------------------
+# Stats: attended history + aggregation
+# ---------------------------------------------------------------------------
+
+def get_attended_history(username, api_key):
+    """All attended setlists, newest first, up to MAX_STATS_PAGES pages."""
+    all_setlists = []
+    for p in range(1, MAX_STATS_PAGES + 1):
+        data, status = api_get(
+            "/user/%s/attended?p=%d" % (url_encode(username), p),
+            api_key,
+            STATS_TTL,
+        )
+        if data == None:
+            if p == 1:
+                return None, "History fetch failed (%d)" % status
+            break
+        page = data.get("setlist", [])
+        all_setlists.extend(page)
+        total = data.get("total", 0)
+        per_page = data.get("itemsPerPage", 20)
+        if len(page) == 0 or p * per_page >= total:
+            break
+    if len(all_setlists) == 0:
+        return None, "No attended shows for %s" % username
+    return all_setlists, None
+
+def top_counts(pairs):
+    """pairs: list of names (may repeat) -> [(name, count)] sorted desc."""
+    counts = {}
+    for name in pairs:
+        if name:
+            counts[name] = counts.get(name, 0) + 1
+    items = sorted(counts.items(), key = lambda kv: -kv[1])
+    return items[:STATS_TOP_N]
+
+def stats_top_artists(setlists):
+    return top_counts([sl.get("artist", {}).get("name", "") for sl in setlists])
+
+def stats_top_venues(setlists):
+    return top_counts([sl.get("venue", {}).get("name", "") for sl in setlists])
+
+def stats_top_songs(setlists):
+    names = []
+    for sl in setlists:
+        names.extend(extract_songs(sl))
+    return top_counts(names)
+
+def year_range(setlists):
+    years = []
+    for sl in setlists:
+        _, _, y = parse_date(sl.get("eventDate", ""))
+        if y:
+            years.append(y)
+    if len(years) == 0:
+        return ""
+    lo, hi = min(years), max(years)
+    if lo == hi:
+        return hi
+    return "%s-%s" % (lo[2:], hi[2:])
+
+# ---------------------------------------------------------------------------
 # Rendering
 # ---------------------------------------------------------------------------
 
@@ -242,6 +306,7 @@ def render_ticket(info, accent, show_songs):
             children = [
                 render.Text(info["month"], font = "tom-thumb", color = "#ffe1dc"),
                 render.Text(info["day"], font = "6x13", color = "#ffffff"),
+                render.Text(info["year"], font = "tom-thumb", color = "#ffe1dc"),
             ],
         ),
     )
@@ -334,7 +399,7 @@ def render_tracklist(info, accent):
     else:
         rows.append(
             render.Text(
-                "- %d SONGS -" % len(info["songs"]),
+                "- %d SONGS · %s -" % (len(info["songs"]), info["year"]),
                 font = "tom-thumb",
                 color = "#5a5a5a",
             ),
@@ -350,6 +415,96 @@ def render_tracklist(info, accent):
             children = [header, body],
         ),
     )
+
+def stats_header(title, right_text, accent):
+    return render.Box(
+        width = 64,
+        height = 7,
+        color = accent,
+        child = render.Padding(
+            pad = (1, 1, 1, 0),
+            child = render.Row(
+                expanded = True,
+                main_align = "space_between",
+                children = [
+                    render.Text(title, font = "tom-thumb", color = "#ffffff"),
+                    render.Text(right_text, font = "tom-thumb", color = "#ffd9d4"),
+                ],
+            ),
+        ),
+    )
+
+def render_stats_list(title, right_text, rows, accent):
+    if len(rows) == 0:
+        rows = [render.Text("No data yet", font = "tom-thumb", color = "#999999")]
+    return render.Root(
+        max_age = 3600,
+        child = render.Column(
+            children = [
+                stats_header(title, right_text, accent),
+                render.Marquee(
+                    height = 25,
+                    scroll_direction = "vertical",
+                    child = render.Padding(
+                        pad = (1, 0, 1, 0),
+                        child = render.Column(children = rows),
+                    ),
+                ),
+            ],
+        ),
+    )
+
+def ranked_rows(entries):
+    """entries: [(name, count)] -> numbered rows with counts."""
+    rows = []
+    for i, entry in enumerate(entries):
+        name, count = entry
+        if len(name) > 9:
+            name = name[:8] + "."
+        num = ("0" + str(i + 1))[-2:]
+        rows.append(
+            render.Row(
+                expanded = True,
+                main_align = "space_between",
+                children = [
+                    render.Row(
+                        children = [
+                            render.Text(num + " ", font = "tom-thumb", color = "#ffb300"),
+                            render.Text(name.upper(), font = "tom-thumb", color = "#ffffff"),
+                        ],
+                    ),
+                    render.Text("x" + str(count), font = "tom-thumb", color = "#999999"),
+                ],
+            ),
+        )
+    return rows
+
+def recent_rows(setlists):
+    rows = []
+    for sl in setlists[:STATS_TOP_N]:
+        month, day, _ = parse_date(sl.get("eventDate", ""))
+        name = sl.get("artist", {}).get("name", "")
+        if len(name) > 10:
+            name = name[:9] + "."
+        rows.append(
+            render.Row(
+                children = [
+                    render.Text("%s%s " % (month, day), font = "tom-thumb", color = "#ffb300"),
+                    render.Text(name.upper(), font = "tom-thumb", color = "#ffffff"),
+                ],
+            ),
+        )
+    return rows
+
+def render_stats_view(mode, setlists, accent):
+    n_shows = str(len(setlists))
+    if mode == "top_artists":
+        return render_stats_list("TOP ARTISTS", n_shows, ranked_rows(stats_top_artists(setlists)), accent)
+    elif mode == "top_venues":
+        return render_stats_list("TOP VENUES", n_shows, ranked_rows(stats_top_venues(setlists)), accent)
+    elif mode == "top_songs":
+        return render_stats_list("TOP SONGS", n_shows, ranked_rows(stats_top_songs(setlists)), accent)
+    return render_stats_list("RECENT", year_range(setlists), recent_rows(setlists), accent)
 
 def render_layout(layout, info, accent, show_songs):
     if layout == "tracklist":
@@ -371,8 +526,15 @@ def main(config):
     accent = config.str("accent", DEFAULT_ACCENT)
     show_songs = config.bool("show_songs", True)
 
+    stats_modes = ["top_artists", "top_venues", "top_songs", "recent"]
+
     # Demo mode when unconfigured
     if api_key == "":
+        if mode in stats_modes:
+            demo_entries = [("Wilco", 12), ("LCD Soundsystem", 9), ("Mitski", 7), ("Spoon", 6), ("Khruangbin", 4)]
+            if mode == "recent":
+                return render_stats_list("RECENT", "24-26", ranked_rows(demo_entries), accent)
+            return render_stats_list("TOP ARTISTS", "87", ranked_rows(demo_entries), accent)
         info = {
             "artist": DEMO["artist"],
             "venue": DEMO["venue"],
@@ -382,6 +544,14 @@ def main(config):
             "songs": DEMO["songs"],
         }
         return render_layout(layout, info, accent, show_songs)
+
+    if mode in stats_modes:
+        if username == "":
+            return render_message("Setup needed", "Enter your setlist.fm username", accent)
+        setlists, err = get_attended_history(username, api_key)
+        if err != None:
+            return render_message("Stats error", err, accent)
+        return render_stats_view(mode, setlists, accent)
 
     if mode == "user":
         if username == "":
@@ -442,6 +612,10 @@ def get_schema():
                 options = [
                     schema.Option(display = "My last concert", value = "user"),
                     schema.Option(display = "Artist's latest setlist", value = "artist"),
+                    schema.Option(display = "Stats: Top artists seen", value = "top_artists"),
+                    schema.Option(display = "Stats: Top venues", value = "top_venues"),
+                    schema.Option(display = "Stats: Top songs heard", value = "top_songs"),
+                    schema.Option(display = "Stats: Recent concerts", value = "recent"),
                 ],
             ),
             schema.Dropdown(
