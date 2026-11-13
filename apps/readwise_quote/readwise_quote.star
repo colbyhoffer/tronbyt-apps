@@ -19,8 +19,15 @@ Picking:
     like the TCEQ alerts app
 
 Layouts:
-  - "Header + scroll": READWISE header bar, quote scrolls underneath
-  - "Full screen": no header, the whole 32px is quote
+  - "Logo + scroll": 16x16 pixel Readwise mark in an 18px left column,
+    quote scrolls on the right (default)
+  - "Header + scroll": 7x7 mark + READWISE wordmark on one line over a
+    dim rule, quote scrolls underneath
+  - "Full screen": no logo, the whole 32px is quote
+
+The marks are hand-drawn pixel versions of the Readwise logo (bordered
+square with a serif R) and are built from render.Box runs so they take
+the accent color.
 
 SETUP
 -----
@@ -44,7 +51,6 @@ ROTATE_KEY_TTL = 86400
 DEFAULT_ACCENT = "#f4b942"  # Readwise yellow
 DEFAULT_TZ = "America/Chicago"
 TEXT_COLOR = "#ffffff"
-TITLE_COLOR = "#f4b942"
 AUTHOR_COLOR = "#999999"
 
 DEMO = {
@@ -52,6 +58,37 @@ DEMO = {
     "title": "The Wisdom of the Bullfrog",
     "author": "William H. McRaven",
 }
+
+# Pixel grids for the Readwise mark: "#" = accent, "." = off.
+LOGO16 = [
+    "################",
+    "#..............#",
+    "#..............#",
+    "#..########....#",
+    "#...##....##...#",
+    "#...##.....#...#",
+    "#...##....##...#",
+    "#...#######....#",
+    "#...##..##.....#",
+    "#...##...##....#",
+    "#...##....##...#",
+    "#...##.....##..#",
+    "#..####....###.#",
+    "#..............#",
+    "#..............#",
+    "################",
+]
+LOGO7 = [
+    "#######",
+    "#.....#",
+    "#.###.#",
+    "#.#.#.#",
+    "#.##..#",
+    "#.#.#.#",
+    "#######",
+]
+LOGO_COL_W = 18  # 1px gutter + 16px mark + 1px gutter
+RULE_COLOR = "#3c3c3c"
 
 # ---------------------------------------------------------------------------
 # Text helpers
@@ -240,44 +277,74 @@ def render_message(title, msg, accent):
         ),
     )
 
-def header_bar(accent, right_text):
+def pixel_rows(grid, color):
+    """Draw a '#'/'.' grid as rows of Box runs so it takes any color."""
+    rows = []
+    for line in grid:
+        boxes = []
+        run_char = ""
+        run_len = 0
+        for ch in line.elems():
+            if ch == run_char:
+                run_len += 1
+                continue
+            if run_len > 0:
+                boxes.append(render.Box(width = run_len, height = 1, color = color if run_char == "#" else "#000000"))
+            run_char = ch
+            run_len = 1
+        if run_len > 0:
+            boxes.append(render.Box(width = run_len, height = 1, color = color if run_char == "#" else "#000000"))
+        rows.append(render.Row(children = boxes))
+    return render.Column(children = rows)
+
+def header_line(accent, right_text):
+    """7x7 mark, READWISE wordmark and a source tag on one 7px line."""
     return render.Box(
         width = 64,
         height = 7,
-        color = accent,
-        child = render.Padding(
-            pad = (1, 1, 1, 0),
-            child = render.Row(
-                expanded = True,
-                main_align = "space_between",
-                children = [
-                    render.Text("READWISE", font = "tom-thumb", color = "#1a1a1a"),
-                    render.Text(right_text, font = "tom-thumb", color = "#1a1a1a"),
-                ],
-            ),
+        child = render.Row(
+            expanded = True,
+            main_align = "space_between",
+            cross_align = "center",
+            children = [
+                render.Row(
+                    cross_align = "center",
+                    children = [
+                        pixel_rows(LOGO7, accent),
+                        render.Box(width = 2, height = 1),
+                        render.Text("READWISE", font = "tom-thumb", color = accent),
+                    ],
+                ),
+                render.Padding(
+                    pad = (0, 0, 1, 0),
+                    child = render.Text(right_text, font = "tom-thumb", color = AUTHOR_COLOR),
+                ),
+            ],
         ),
     )
 
-def attribution_rows(quote, accent):
+def attribution_rows(quote, accent, width):
     rows = []
     if quote["title"] != "":
-        rows.append(render.WrappedText(quote["title"], font = "tom-thumb", color = accent, width = 62))
+        rows.append(render.WrappedText(quote["title"], font = "tom-thumb", color = accent, width = width))
     if quote["author"] != "":
-        rows.append(render.WrappedText(quote["author"], font = "tom-thumb", color = AUTHOR_COLOR, width = 62))
+        rows.append(render.WrappedText(quote["author"], font = "tom-thumb", color = AUTHOR_COLOR, width = width))
     return rows
 
-def quote_body(quote, accent, height):
+def quote_body(quote, accent, height, width):
+    """Wrapped quote + attribution in a vertical marquee `width` px wide
+    (plus a 1px gutter each side)."""
     rows = [
         render.WrappedText(
             "\"" + quote["text"] + "\"",
             font = "tom-thumb",
             color = TEXT_COLOR,
-            width = 62,
+            width = width,
         ),
     ]
-    attribution = attribution_rows(quote, accent)
+    attribution = attribution_rows(quote, accent, width)
     if len(attribution) > 0:
-        rows.append(render.Box(width = 62, height = 3))
+        rows.append(render.Box(width = width, height = 3))
         rows.extend(attribution)
 
     # A marquee only scrolls when the child is taller than the viewport,
@@ -291,14 +358,33 @@ def quote_body(quote, accent, height):
         ),
     )
 
+def render_logo_layout(quote, accent, delay):
+    """16x16 mark centered in an 18px left column, quote on the right."""
+    mark = render.Box(
+        width = LOGO_COL_W,
+        height = 32,
+        child = pixel_rows(LOGO16, accent),
+    )
+    return render.Root(
+        delay = delay,
+        max_age = 300,
+        child = render.Row(
+            children = [
+                mark,
+                quote_body(quote, accent, 32, 64 - LOGO_COL_W - 2),
+            ],
+        ),
+    )
+
 def render_header_layout(quote, accent, delay, right_text):
     return render.Root(
         delay = delay,
         max_age = 300,
         child = render.Column(
             children = [
-                header_bar(accent, right_text),
-                quote_body(quote, accent, 25),
+                header_line(accent, right_text),
+                render.Box(width = 64, height = 1, color = RULE_COLOR),
+                quote_body(quote, accent, 24, 62),
             ],
         ),
     )
@@ -307,13 +393,15 @@ def render_full_layout(quote, accent, delay):
     return render.Root(
         delay = delay,
         max_age = 300,
-        child = quote_body(quote, accent, 32),
+        child = quote_body(quote, accent, 32, 62),
     )
 
 def render_quote(layout, quote, accent, delay, right_text):
     if layout == "full":
         return render_full_layout(quote, accent, delay)
-    return render_header_layout(quote, accent, delay, right_text)
+    elif layout == "header":
+        return render_header_layout(quote, accent, delay, right_text)
+    return render_logo_layout(quote, accent, delay)
 
 # ---------------------------------------------------------------------------
 # Main
@@ -323,7 +411,7 @@ def main(config):
     token = config.str("token", "").strip()
     source = config.str("source", "review")
     pick = config.str("pick", "daily")
-    layout = config.str("layout", "header")
+    layout = config.str("layout", "logo")
     accent = config.str("accent", DEFAULT_ACCENT)
     max_len = int(config.str("max_len", "500"))
     delay = int(config.str("speed", "100"))
@@ -334,7 +422,7 @@ def main(config):
 
     if source == "library":
         quotes, err = fetch_library(token)
-        right_text = "LIBRARY"
+        right_text = "ALL"
     else:
         quotes, err = fetch_review(token)
         right_text = "DAILY"
@@ -394,8 +482,9 @@ def get_schema():
                 name = "Layout",
                 desc = "How to display it",
                 icon = "tableColumns",
-                default = "header",
+                default = "logo",
                 options = [
+                    schema.Option(display = "Logo + scroll", value = "logo"),
                     schema.Option(display = "Header + scroll", value = "header"),
                     schema.Option(display = "Full screen", value = "full"),
                 ],
@@ -429,7 +518,7 @@ def get_schema():
             schema.Color(
                 id = "accent",
                 name = "Accent Color",
-                desc = "Header bar and book title color",
+                desc = "Logo, wordmark and book title color",
                 icon = "brush",
                 default = DEFAULT_ACCENT,
             ),

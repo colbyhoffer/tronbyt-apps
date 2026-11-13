@@ -44,7 +44,11 @@ Sources:
 - **Whole library** — every highlight in your account (export endpoint, cached 6 h)
 
 Pick: **same quote all day** (seeded from the date in your device's timezone) or
-**next quote each render**. Layouts: header bar + scroll, or full-screen quote.
+**next quote each render**.
+
+Layouts: **Logo + scroll** (hand-drawn 16x16 pixel Readwise mark in the left column, default),
+**Header + scroll** (7x7 mark + READWISE wordmark over a rule), or **Full screen**. The marks are
+drawn from `render.Box` runs so they follow the accent color.
 Options: max quote length, scroll speed, accent color. Demo quote when no token is set.
 
 Setup: copy your token from [readwise.io/access_token](https://readwise.io/access_token)
