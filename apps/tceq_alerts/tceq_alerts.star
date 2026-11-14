@@ -6,13 +6,14 @@ Watches the TCEQ Air Emission Event Report RSS feed
 (https://www2.tceq.texas.gov/oce/eer/RSSDataFeed.xml) and shows the
 events whose feed title contains a keyword (default "REFINERY").
 
-The feed covers roughly the last seven days of events. Each render
-shows one matching event and rotates to the next one on the following
-render, so a Tronbyt cycling through its apps walks the whole list.
+The feed covers roughly the last seven days of events. The display
+shows the newest matching event by start time. With "Rotate Through
+All" on, each render shows the next match instead, so a Tronbyt cycling
+through its apps walks the whole list.
 
 The left 20px is an animated pixel-art refinery (flickering flare);
 the right side shows, per event:
-  - "TCEQ ALERT" header with a position-indicator underline
+  - "TCEQ ALERT" header (underline shows position when rotating)
   - facility name (from the feed title)
   - county + event start date/time (county from the detail page)
   - status + cause text (from the detail page)
@@ -226,8 +227,17 @@ def fetch_details(ev):
     return out
 
 # ---------------------------------------------------------------------------
-# Rotation: show the next matching event on each render
+# Selection: newest matching event first; optional rotation through all
 # ---------------------------------------------------------------------------
+
+def sort_key(ev):
+    """Newest start time first; incident number breaks ties. The feed itself
+    is ordered by incident number, which is not the same as start time."""
+    ev_id = int(ev["id"]) if ev["id"].isdigit() else 0
+    return (ev["ts"], ev_id)
+
+def newest_first(events):
+    return sorted(events, key = sort_key, reverse = True)
 
 def pick_index(key, n):
     if n <= 1:
@@ -374,6 +384,7 @@ def main(config):
     max_days = int(config.str("max_days", "0"))
     show_details = config.bool("show_details", True)
     hide_empty = config.bool("hide_empty", True)
+    rotate = config.bool("rotate", False)
     demo = config.bool("demo", False)
 
     if demo:
@@ -396,12 +407,17 @@ def main(config):
         age = "past %d day%s" % (max_days, "" if max_days == 1 else "s") if max_days > 0 else "in feed"
         return render_message(["No events", age], accent)
 
-    idx = pick_index("tceq_alerts_idx_" + keyword + "_" + str(max_days), len(matches))
+    matches = newest_first(matches)
+    if rotate:
+        idx = pick_index("tceq_alerts_idx_" + keyword + "_" + str(max_days), len(matches))
+        pos, total = idx + 1, len(matches)
+    else:
+        idx, pos, total = 0, 1, 1  # latest only; no pips
     ev = matches[idx]
     if show_details:
         ev = fetch_details(ev)
 
-    return render_event(ev, idx + 1, len(matches), accent, delay, show_details)
+    return render_event(ev, pos, total, accent, delay, show_details)
 
 def get_schema():
     return schema.Schema(
@@ -433,6 +449,13 @@ def get_schema():
                 desc = "Load county, status and cause from the event page",
                 icon = "circleInfo",
                 default = True,
+            ),
+            schema.Toggle(
+                id = "rotate",
+                name = "Rotate Through All",
+                desc = "Off: always show the newest matching event. On: step through every match, one per render",
+                icon = "rotate",
+                default = False,
             ),
             schema.Toggle(
                 id = "hide_empty",

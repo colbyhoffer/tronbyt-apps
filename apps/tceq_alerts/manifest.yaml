@@ -1,7 +1,7 @@
 id: tceq_alerts
 name: TCEQ Refinery Alerts
 summary: Texas refinery emission events
-desc: Shows air emission events from the TCEQ Emission Event Report RSS feed, filtered to titles containing a keyword (default REFINERY). Rotates through matching events with county, status and cause.
+desc: Shows air emission events from the TCEQ Emission Event Report RSS feed, filtered to titles containing a keyword (default REFINERY). Shows the newest matching event with county, incident status and cause; can rotate through all matches.
 author: colbyhoffer
 fileName: tceq_alerts.star
 packageName: tceq_alerts
