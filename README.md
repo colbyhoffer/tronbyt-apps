@@ -74,22 +74,25 @@ Renders live at http://localhost:8080 with a config form.
 
 ### MBA Countdown (`apps/mba_countdown`)
 
-Counts down the calendar days to McCombs MBA graduation (default **May 7, 2027**) on the 64x32 display,
-under a pixel Longhorn silhouette and a TEXAS / McCombs lockup in burnt orange.
+Counts down the calendar days to McCombs MBA graduation (default **May 7, 2027**) on the 64x32 display.
+The Longhorn is the official silhouette, rasterized from the PMS 159 vector by
+`apps/mba_countdown/sprite_gen.py` with area-averaged edges so the outline LEDs fade instead of stair-stepping.
 
 Layouts:
 
-- **Lockup** (default) — the count in 6x13 with `DAYS` beside it, and a footer that alternates between
-  `UNTIL GRADUATION` and the date
-- **Big Number** — the count in 10x20 with a `DAYS / MAY 7 / 2027` label column; one still frame, readable
-  from across the room
+- **Hero** (default) — the Longhorn fills the whole panel, horn tips in the corners; the count sits in the
+  open space left of the face, the date and `MBA` to the right
+- **Lockup** — 13-row header (Longhorn + TEXAS / McCombs), the count in 6x13 with `DAYS`, and a footer that
+  alternates between `UNTIL GRADUATION` and the date
+- **Big Number** — same header, the count in 10x20 with a `DAYS / MAY 7 / 2027` label column
 
-Set a **Program Start** date and the rule under the header fills up as a progress bar. On the day it
-switches to `TODAY!` / `HOOK 'EM HORNS`, and afterwards to `MBA DONE` with the class year.
+Header style for Lockup and Big Number: **Burnt orange band** (white Longhorn and lockup on orange) or
+**Line on black**. Set a **Program Start** date and a progress bar shows how far through the program you are
+(under the header, or under the count in Hero). On the day it switches to `TODAY!` / `GRAD DAY!`, and
+afterwards to `MBA DONE` with the class year.
 
-Days are counted in the device's timezone, so the number rolls over at midnight. The Longhorn is
-drawn from `render.Box` runs and follows the accent color. Text is trimmed to its glyph rows with
-`render.Text(height, offset)` so no rows go to blank descender lines.
+Days are counted in the device's timezone, so the number rolls over at midnight. Text is trimmed to its
+glyph rows with `render.Text(height, offset)` so no rows go to blank descender lines.
 
-Options: graduation date (`YYYY-MM-DD`), layout, event name (long names scroll), days vs. weeks + days,
-program start, the two header lines, accent color. No API key needed.
+Options: graduation date (`YYYY-MM-DD`), layout, header style, event name (long names scroll),
+days vs. weeks + days, program start, the two header lines. No API key needed.
