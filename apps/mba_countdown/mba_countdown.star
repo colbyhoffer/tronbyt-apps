@@ -3,23 +3,38 @@ MBA Graduation Countdown for Tronbyt/Tidbyt
 ===========================================
 
 Counts down the days to graduation on the 64x32 display, dressed up in
-Texas McCombs colors:
+Texas McCombs colors. Two layouts:
 
-  rows  0-12  header: pixel Longhorn silhouette (26x13) on the left,
-              "TEXAS" / "McCOMBS" lockup on the right
+Lockup (default)
+  rows  0-12  pixel Longhorn silhouette (26x13) on the left, "TEXAS" /
+              "McCOMBS" lockup on the right
   row   13    thin burnt-orange rule
   rows 14-26  the count, big: "174" in 6x13 with "DAYS" beside it
               (or "24W 6D" in weeks mode)
   rows 27-31  footer that alternates every few seconds between
               "UNTIL GRADUATION" and the date, "MAY 7, 2027"
 
-On the day itself the count becomes "TODAY!" and the footer says
+Big Number
+  rows  0-12  the same Longhorn + lockup header
+  row   13    rule
+  rows 14-31  the count in 10x20 with a three-line label column:
+              DAYS / MAY 7 / 2027
+
+If a program start date is set, the rule doubles as a progress bar:
+the lit part is how far through the program you are.
+
+On the day itself the count becomes TODAY! and the footer says
 HOOK 'EM HORNS; afterwards it shows MBA / DONE with the class year.
 
 The Longhorn is drawn from render.Box runs (like the Readwise mark), so
 it follows the accent color. Days are counted as calendar days in the
 device's timezone, so the number ticks over at midnight, not 24 h after
 the first render.
+
+Text sizing note: render.Text(height = h, offset = o) puts the baseline
+at row h - descent - o, so e.g. tom-thumb caps fit exactly in 5 rows
+with height = 5, offset = -1, and 6x13 digits in 9 rows with
+height = 9, offset = -2.
 """
 
 load("math.star", "math")
@@ -36,6 +51,7 @@ DEFAULT_TZ = "America/Chicago"
 
 WHITE = "#ffffff"
 DIM = "#9a9a9a"
+TRACK = "#3a3a3a"  # unlit part of the progress rule
 BLACK = "#000000"
 
 FRAME_DELAY = 100  # ms per frame
@@ -63,6 +79,7 @@ LONGHORN = [
 LOGO_W = 26
 LOGO_H = 13
 HEADER_TEXT_W = 64 - LOGO_W - 2  # 1px gutter either side of the mark
+RULE_W = 60
 
 # ---------------------------------------------------------------------------
 # Date math
@@ -81,13 +98,13 @@ def parse_date(s):
         return None
     return (y, m, d)
 
-def days_until(target, tz):
-    """Whole calendar days from today (in tz) to the target date. Rounds
-    the hour difference so DST days (23/25 h) don't skew the count."""
-    now = time.now().in_location(tz)
-    today = time.time(year = now.year, month = now.month, day = now.day, location = tz)
-    goal = time.time(year = target[0], month = target[1], day = target[2], location = tz)
-    diff = goal - today
+def midnight(date, tz):
+    return time.time(year = date[0], month = date[1], day = date[2], location = tz)
+
+def days_between(a, b):
+    """Whole calendar days from midnight a to midnight b. Rounds the hour
+    difference so DST days (23/25 h) don't skew the count."""
+    diff = b - a
     return int(math.floor((diff.hours + 12.0) / 24.0))
 
 def date_label(target):
@@ -117,14 +134,22 @@ def pixel_rows(grid, color):
         rows.append(render.Row(children = boxes))
     return render.Column(children = rows)
 
+def tiny(text, color):
+    """tom-thumb caps/digits in exactly 5 rows (descender row dropped)."""
+    return render.Text(content = text, font = "tom-thumb", height = 5, offset = -1, color = color)
+
+def small(text, color):
+    """tb-8 caps in exactly 6 rows."""
+    return render.Text(content = text, font = "tb-8", height = 6, offset = -1, color = color)
+
 def header(accent, line1, line2):
-    """Longhorn on the left, two-line school lockup centered on the right.
-    The Box clips tom-thumb's descender row so the block stays 13px."""
+    """Longhorn on the left, two-line school lockup centered on the right:
+    5x8 (8 rows) over tom-thumb (5 rows) = the mark's 13 rows."""
     lockup = render.Column(
         cross_align = "center",
         children = [
             render.Text(content = line1, font = "5x8", color = accent),
-            render.Text(content = line2, font = "tom-thumb", color = WHITE),
+            tiny(line2, WHITE),
         ],
     )
     return render.Row(
@@ -136,66 +161,59 @@ def header(accent, line1, line2):
         ],
     )
 
-def rule(accent):
-    return render.Row(
-        children = [
-            render.Box(width = 2, height = 1),
-            render.Box(width = 60, height = 1, color = accent),
-            render.Box(width = 2, height = 1),
-        ],
-    )
+def rule(accent, progress):
+    """1px rule under the header. With a progress fraction it becomes a
+    bar: lit from the left for the part of the program already done."""
+    if progress == None:
+        bar = [render.Box(width = RULE_W, height = 1, color = accent)]
+    else:
+        lit = int(math.round(RULE_W * progress))
+        lit = max(0, min(RULE_W, lit))
+        bar = []
+        if lit > 0:
+            bar.append(render.Box(width = lit, height = 1, color = accent))
+        if lit < RULE_W:
+            bar.append(render.Box(width = RULE_W - lit, height = 1, color = TRACK))
+    return render.Row(children = [render.Box(width = 2, height = 1)] + bar + [render.Box(width = 2, height = 1)])
 
-def count_line(big, small, big_color):
-    """The 13px count band: a 6x13 number with a tb-8 unit hung off its
-    baseline (6x13 has a 2px descent, tb-8 1px, hence the 1px pad)."""
+def count_lockup(big, unit, big_color):
+    """13px count band: 6x13 number with a tb-8 unit on the same baseline."""
     kids = [render.Text(content = big, font = "6x13", color = big_color)]
-    if small != "":
+    if unit != "":
         kids.append(render.Box(width = 2, height = 1))
-        kids.append(render.Padding(
-            pad = (0, 0, 0, 1),
-            child = render.Text(content = small, font = "tb-8", color = DIM),
-        ))
+        kids.append(render.Padding(pad = (0, 0, 0, 1), child = render.Text(content = unit, font = "tb-8", color = DIM)))
     return render.Box(
         width = 64,
         height = 13,
         child = render.Row(main_align = "center", cross_align = "end", children = kids),
     )
 
-def footer_text(text, color):
-    return render.Text(content = text, font = "tom-thumb", color = color)
+def footer(text, color):
+    return render.Box(width = 64, height = 5, child = tiny(text, color))
 
-def footer_frames(lines, color):
-    """One footer per frame. Two short lines alternate with a hold;
-    anything too wide for 64px (tom-thumb is 4px/char) scrolls instead.
-    The footer is 6px (tom-thumb's descender row) and the Root clips
-    that last row, so caps and digits sit flush with the bottom edge."""
-    fits = True
-    for s in lines:
-        if len(s) * 4 - 1 > 64:
-            fits = False
-    if not fits:
-        marquee = render.Marquee(
-            width = 64,
-            child = footer_text(SEP.join(lines), color),
-            offset_start = 64,
-            offset_end = 64,
-        )
-        return [marquee]
-    frames = []
-    for s in lines:
-        box = render.Box(width = 64, height = 6, child = footer_text(s, color))
-        for _ in range(HOLD):
-            frames.append(box)
-    return frames
+def footer_marquee(text, color):
+    return render.Box(
+        width = 64,
+        height = 5,
+        child = render.Marquee(width = 64, child = tiny(text, color), offset_start = 64, offset_end = 64),
+    )
 
-def screen(accent, line1, line2, big, small, big_color, footer):
-    return render.Column(
-        children = [
-            header(accent, line1, line2),
-            rule(accent),
-            count_line(big, small, big_color),
-            footer,
-        ],
+def count_big(big, labels, big_color, accent):
+    """18px band: 10x20 digits trimmed to their 13 rows, with a three-line
+    label column (tb-8 + two tom-thumb lines) hung off the same baseline."""
+    number = render.Text(content = big, font = "10x20", height = 13, offset = -4, color = big_color)
+    kids = [number]
+    if len(labels) > 0:
+        lines = [small(labels[0], accent)]
+        for s in labels[1:]:
+            lines.append(render.Box(width = 1, height = 1))
+            lines.append(tiny(s, DIM))
+        kids.append(render.Box(width = 3, height = 1))
+        kids.append(render.Column(children = lines))
+    return render.Box(
+        width = 64,
+        height = 18,
+        child = render.Row(main_align = "center", cross_align = "end", children = kids),
     )
 
 # ---------------------------------------------------------------------------
@@ -204,6 +222,7 @@ def screen(accent, line1, line2, big, small, big_color, footer):
 
 def main(config):
     accent = config.str("accent", DEFAULT_ACCENT)
+    layout = config.str("layout", "lockup")
     line1 = config.str("line1", DEFAULT_LINE1).strip() or DEFAULT_LINE1
     line2 = config.str("line2", DEFAULT_LINE2).strip() or DEFAULT_LINE2
     event = (config.str("event", DEFAULT_EVENT).strip() or DEFAULT_EVENT).upper()
@@ -213,35 +232,70 @@ def main(config):
     target = parse_date(config.str("date", DEFAULT_DATE))
     if target == None:
         target = parse_date(DEFAULT_DATE)
-    days = days_until(target, tz)
-    when = date_label(target)
+    start = parse_date(config.str("start", ""))
 
+    now = time.now().in_location(tz)
+    today = midnight((now.year, now.month, now.day), tz)
+    goal = midnight(target, tz)
+    days = days_between(today, goal)
+    when = date_label(target)
+    month_day = "%s %d" % (MONTHS[target[1] - 1], target[2])
+    year = str(target[0])
+
+    progress = None
+    if start != None:
+        total = days_between(midnight(start, tz), goal)
+        if total > 0:
+            progress = max(0.0, min(1.0, float(total - days) / float(total)))
+
+    # What the count band says, per state. "labels" is the big layout's
+    # three-line column; "lines" is the lockup footer's alternation.
     if days > 0:
-        if unit == "weeks" and days >= 7:
-            big = "%dW %dD" % (days // 7, days % 7)
-            small = ""
-        else:
-            big = str(days)
-            small = "DAY" if days == 1 else "DAYS"
         big_color = WHITE
         lines = ["UNTIL " + event, when]
+        if unit == "weeks" and days >= 7:
+            big = "%dW %dD" % (days // 7, days % 7)
+            unit_text = ""
+            big_num = str(days // 7)
+            labels = ["WEEKS", "%d DAYS" % (days % 7), "TO GO"]
+        else:
+            big = str(days)
+            unit_text = "DAY" if days == 1 else "DAYS"
+            big_num = big
+            labels = [unit_text, month_day, year]
     elif days == 0:
-        big, small, big_color = "TODAY!", "", accent
+        big_color = accent
+        big, unit_text = "TODAY!", ""
+        big_num, labels = "TODAY", []
         lines = ["HOOK 'EM HORNS", event + " DAY"]
     else:
-        big, small, big_color = "MBA", "DONE", accent
-        lines = ["CLASS OF %d" % target[0], "HOOK 'EM HORNS"]
+        big_color = accent
+        big, unit_text = "MBA", "DONE"
+        big_num, labels = "DONE", ["MBA", month_day, year]
+        lines = ["CLASS OF " + year, "HOOK 'EM HORNS"]
 
-    frames = footer_frames(lines, accent if days <= 0 else DIM)
-    if len(frames) == 1:
-        footer = frames[0]
-    else:
-        footer = render.Animation(children = frames)
+    top = [header(accent, line1, line2), rule(accent, progress)]
 
-    return render.Root(
-        delay = FRAME_DELAY,
-        child = screen(accent, line1, line2, big, small, big_color, footer),
-    )
+    if layout == "big":
+        return render.Root(
+            child = render.Column(children = top + [count_big(big_num, labels, big_color, accent)]),
+        )
+
+    footer_color = accent if days <= 0 else DIM
+    fits = True
+    for s in lines:
+        if len(s) * 4 - 1 > 64:
+            fits = False
+    if not fits:
+        body = top + [count_lockup(big, unit_text, big_color), footer_marquee(SEP.join(lines), footer_color)]
+        return render.Root(delay = FRAME_DELAY, child = render.Column(children = body))
+
+    frames = []
+    for s in lines:
+        screen = render.Column(children = top + [count_lockup(big, unit_text, big_color), footer(s, footer_color)])
+        for _ in range(HOLD):
+            frames.append(screen)
+    return render.Root(delay = FRAME_DELAY, child = render.Animation(children = frames))
 
 # ---------------------------------------------------------------------------
 # Schema
@@ -258,10 +312,21 @@ def get_schema():
                 icon = "calendarDay",
                 default = DEFAULT_DATE,
             ),
+            schema.Dropdown(
+                id = "layout",
+                name = "Layout",
+                desc = "How to arrange the screen",
+                icon = "tableColumns",
+                default = "lockup",
+                options = [
+                    schema.Option(display = "Lockup (count + footer)", value = "lockup"),
+                    schema.Option(display = "Big Number", value = "big"),
+                ],
+            ),
             schema.Text(
                 id = "event",
                 name = "Event",
-                desc = "Shown as UNTIL <event> in the footer",
+                desc = "Shown as UNTIL <event> in the Lockup footer",
                 icon = "graduationCap",
                 default = DEFAULT_EVENT,
             ),
@@ -275,6 +340,13 @@ def get_schema():
                     schema.Option(display = "Days", value = "days"),
                     schema.Option(display = "Weeks and days", value = "weeks"),
                 ],
+            ),
+            schema.Text(
+                id = "start",
+                name = "Program Start",
+                desc = "YYYY-MM-DD; when set, the rule under the header fills up as a progress bar",
+                icon = "flagCheckered",
+                default = "",
             ),
             schema.Text(
                 id = "line1",

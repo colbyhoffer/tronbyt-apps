@@ -74,14 +74,22 @@ Renders live at http://localhost:8080 with a config form.
 
 ### MBA Countdown (`apps/mba_countdown`)
 
-Counts down the calendar days to McCombs MBA graduation (default **May 7, 2027**) on the 64x32 display:
-a pixel Longhorn silhouette and a TEXAS / McCombs lockup in burnt orange across the top, the count
-big in the middle (`175 DAYS`, or `25W 0D` in weeks mode), and a footer that alternates between
-`UNTIL GRADUATION` and the date. On the day it switches to `TODAY!` / `HOOK 'EM HORNS`, and
-afterwards to `MBA DONE` with the class year.
+Counts down the calendar days to McCombs MBA graduation (default **May 7, 2027**) on the 64x32 display,
+under a pixel Longhorn silhouette and a TEXAS / McCombs lockup in burnt orange.
+
+Layouts:
+
+- **Lockup** (default) — the count in 6x13 with `DAYS` beside it, and a footer that alternates between
+  `UNTIL GRADUATION` and the date
+- **Big Number** — the count in 10x20 with a `DAYS / MAY 7 / 2027` label column; one still frame, readable
+  from across the room
+
+Set a **Program Start** date and the rule under the header fills up as a progress bar. On the day it
+switches to `TODAY!` / `HOOK 'EM HORNS`, and afterwards to `MBA DONE` with the class year.
 
 Days are counted in the device's timezone, so the number rolls over at midnight. The Longhorn is
-drawn from `render.Box` runs and follows the accent color.
+drawn from `render.Box` runs and follows the accent color. Text is trimmed to its glyph rows with
+`render.Text(height, offset)` so no rows go to blank descender lines.
 
-Options: graduation date (`YYYY-MM-DD`), event name (long names scroll), days vs. weeks + days,
-the two header lines, accent color. No API key needed.
+Options: graduation date (`YYYY-MM-DD`), layout, event name (long names scroll), days vs. weeks + days,
+program start, the two header lines, accent color. No API key needed.
