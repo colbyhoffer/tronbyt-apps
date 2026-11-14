@@ -13,7 +13,14 @@ artist, venue, date + song count, and a scrolling marquee of the songs.
 Modes:
 
 - **My last concert** — most recent show marked attended on your setlist.fm account
+- **Random concert I attended** — a random show from your attended history, new pick each render
 - **Artist's latest setlist** — newest setlist for any artist
+- **Stats** — Top artists seen, Top venues, Top songs heard, or Recent concerts, computed
+  from up to 200 attended shows (6 h cache)
+
+Layouts for the concert modes: **Ticket Stub** (date block + perforation, default),
+**Tracklist** (header bar + vertically scrolling numbered songs), **Classic** (stacked marquees).
+Options: scroll speed, accent color, show songs.
 
 Setup: get a free API key at [setlist.fm/settings/apps](https://www.setlist.fm/settings/apps),
 then enter it with your setlist.fm username (or an artist name) in the app settings.
