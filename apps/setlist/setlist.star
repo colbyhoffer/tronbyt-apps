@@ -28,6 +28,7 @@ setlists, 24 h for artist lookups).
 """
 
 load("http.star", "http")
+load("random.star", "random")
 load("render.star", "render")
 load("schema.star", "schema")
 
@@ -538,12 +539,15 @@ def main(config):
         }
         return render_layout(layout, info, accent, show_songs, delay)
 
-    if mode in stats_modes:
+    if mode in stats_modes or mode == "random":
         if username == "":
             return render_message("Setup needed", "Enter your setlist.fm username", accent)
         setlists, err = get_attended_history(username, api_key)
         if err != None:
             return render_message("Stats error", err, accent)
+        if mode == "random":
+            pick = setlists[random.number(0, len(setlists) - 1)]
+            return render_layout(layout, setlist_to_info(pick), accent, show_songs, delay)
         return render_stats_view(mode, setlists, accent, delay)
 
     if mode == "user":
@@ -558,6 +562,9 @@ def main(config):
     if err != None:
         return render_message("Setlist error", err, accent)
 
+    return render_layout(layout, setlist_to_info(setlist), accent, show_songs, delay)
+
+def setlist_to_info(setlist):
     artist = setlist.get("artist", {}).get("name", "Unknown artist")
     venue = setlist.get("venue", {})
     venue_name = venue.get("name", "")
@@ -572,7 +579,7 @@ def main(config):
         venue_city += ", " + region
 
     month, day, year = parse_date(setlist.get("eventDate", ""))
-    info = {
+    return {
         "artist": artist,
         "venue": venue_city,
         "month": month,
@@ -580,7 +587,6 @@ def main(config):
         "year": year,
         "songs": extract_songs(setlist),
     }
-    return render_layout(layout, info, accent, show_songs, delay)
 
 # ---------------------------------------------------------------------------
 # Schema
@@ -604,6 +610,7 @@ def get_schema():
                 default = "user",
                 options = [
                     schema.Option(display = "My last concert", value = "user"),
+                    schema.Option(display = "Random concert I attended", value = "random"),
                     schema.Option(display = "Artist's latest setlist", value = "artist"),
                     schema.Option(display = "Stats: Top artists seen", value = "top_artists"),
                     schema.Option(display = "Stats: Top venues", value = "top_venues"),
