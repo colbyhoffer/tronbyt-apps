@@ -14,7 +14,8 @@ through its apps walks the whole list.
 The left 20px is an animated pixel-art refinery (flickering flare);
 the right side shows, per event:
   - "TCEQ ALERT" header (underline shows position when rotating)
-  - facility name (from the feed title)
+  - owner/operator name (regulated entity name from the feed title
+    when details are off)
   - county + event start date/time (county from the detail page)
   - status + cause text (from the detail page)
 
@@ -61,6 +62,7 @@ DEMO_EVENTS = [
         "id": "468365",
         "rn": "RN100214386",
         "name": "VALERO CORPUS CHRISTI REFINERY WEST PLANT",
+        "operator": "VALERO REFINING-TEXAS LP",
         "link": "",
         "when": "NOV 11 11:45A",
         "ts": 0,
@@ -220,6 +222,7 @@ def fetch_details(ev):
         return ev
     html = res.body()
     out = dict(ev)
+    out["operator"] = field_after(html, "Name of Owner or Operator")
     out["county"] = field_after(html, "County:")
     out["status"] = field_after(html, "Incident Status:")
     out["type"] = field_after(html, "Event/Activity Type:")
@@ -331,7 +334,9 @@ def render_message(lines, accent):
     return render.Root(child = with_sprite(render.Column(children = kids)))
 
 def render_event(ev, pos, total, accent, delay, show_details):
-    name = ev["name"] or ev.get("title", "?")
+    # Owner/operator from the detail page when we have it, else the
+    # regulated entity name from the feed title.
+    name = ev.get("operator") or ev["name"] or ev.get("title", "?")
 
     meta_parts = []
     if show_details and ev.get("county"):
@@ -446,7 +451,7 @@ def get_schema():
             schema.Toggle(
                 id = "show_details",
                 name = "Fetch Details",
-                desc = "Load county, status and cause from the event page",
+                desc = "Load operator, county, status and cause from the event page",
                 icon = "circleInfo",
                 default = True,
             ),

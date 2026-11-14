@@ -28,7 +28,7 @@ then enter it with your setlist.fm username (or an artist name) in the app setti
 ### TCEQ Refinery Alerts (`apps/tceq_alerts`)
 
 Watches the [TCEQ Air Emission Event Report RSS feed](https://www2.tceq.texas.gov/oce/eer/RSSDataFeed.xml)
-and shows the newest event whose title contains a keyword (default `REFINERY`): facility name,
+and shows the newest event whose title contains a keyword (default `REFINERY`): owner/operator,
 county + start time, and incident status + cause (pulled from the event's detail page and cached).
 Turn on "Rotate Through All" to step through every match, one per render.
 
