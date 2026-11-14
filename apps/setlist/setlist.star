@@ -546,7 +546,9 @@ def main(config):
         if err != None:
             return render_message("Stats error", err, accent)
         if mode == "random":
-            pick = setlists[random.number(0, len(setlists) - 1)]
+            with_songs = [sl for sl in setlists if len(extract_songs(sl)) > 0]
+            pool = with_songs if len(with_songs) > 0 else setlists
+            pick = pool[random.number(0, len(pool) - 1)]
             return render_layout(layout, setlist_to_info(pick), accent, show_songs, delay)
         return render_stats_view(mode, setlists, accent, delay)
 
