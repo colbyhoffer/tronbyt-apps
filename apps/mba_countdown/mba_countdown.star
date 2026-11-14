@@ -14,12 +14,12 @@ Layouts
     a tom-thumb unit), the date and MBA label to the right. If a
     program start is set, a 25px progress bar runs under the count.
   Lockup
-    13-row header (Longhorn 26x13 + TEXAS / McCOMBS), 1px rule, 6x13
-    count with its unit on the baseline, and a 5px footer alternating
-    between UNTIL GRADUATION and the date every 2.5 s.
+    16-row header (Longhorn 32x16 + TEXAS / McCOMBS), 1px rule, 6x13
+    count trimmed to 9 rows with its unit on the baseline, and a 5px
+    footer alternating between UNTIL GRADUATION and the date every 2.5 s.
   Big Number
     Same header, then the count in 10x20 trimmed to its 13 glyph rows
-    with a three-line label column: DAYS / MAY 7 / 2027.
+    with a two-line label column: DAYS / MAY 7.
 
 Header style (Lockup and Big Number)
   Band: white Longhorn and lockup on a burnt-orange band
@@ -65,10 +65,10 @@ MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", 
 
 # Base64 PNG sprites from sprite_gen.py. Regenerate there, don't hand-edit.
 LONGHORN_64 = "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAIAAAAt/+nTAAADlUlEQVR42tWYX2xTdRTHP7/ert2Vjo216cZAJwSZOmRYh4jyosTE8KAh+ESI8UHFF18kvuir8cXgiy8uJsYYY6JEUROXJSiYaDKROVZhwujs6ICyP23XbaV/7u291wdu7Fxut/Z6t3Xn7ff7nXN6vuec37nf/sSJbg5spdELcEfl5jwjKQYnuTBBrkiNiOxmbyuhFjqa2drAhjqA2QK/3ER8eJBGL6qGz4NfRhKmTa7Ir7f4fpTLibUMfVeA53dwYAuy29zRDJI5Mgp1ErMFxELtejePBDjYztP34pHMzcFJPv6Tq6nVDv3BZl7dTajFXCoa527wU4xLCfILWkNYGvtlXt7FoW24BIBhcCZGT5hUfjVC98u8tptn2xECQDfoHePTyyRzFspiCUfbm3izm06/ubyj8sklvhtFM1YqdK/EkZ0cfcjscmA4yQcDRNNlTcTSHiXBS50ce9gsBTA+x0dh+uPOR7+/jTceZbPPXOoGn//FZ8PL5EtU4rq7lbf3sam+tHP+Nj1hxmYXa2700NGMXyaaxiOZJqk8qsb2JlJ5riaZUxZbbWvkeBf7Npd2ZvK8d56BieVjExWmJyDzzhPsCZZ2dIPwFH9MEc9QKOLz0Bngmfvw1S3lJ6NydpzhBBkFr5s2H48F6QqWKgwMTfHub9Ydbx/A3XY63sWLHdXYVCmDk1yc4osr6BVfM2FjML++p3SzHZThJG/9XPXX0042Bexv4/ADhFr+U3p7ohsMTnI6Qn8cG+PNZeMnDRiapj+OqjuQeFWnP87QNPaGs50EntjLc/fjdjnZP0WdvuucvLDyFZAEoaBF9EaVNVwkbhehoJ2GlGz0z48xigbtG6l3oxtE0nw5Qk+YF3ZU6uSVPm5laPKyqR4hSBc4dY33fyevrUoL/VuKZpmMYs4Nr0TvkYpSqBsc+pqCZvJkn4dUzj49sd/ImsF0tjT1Chp/pysyHE2b0d8l7dPZ/0WunLyJZ8edVFsDAD9EyarL6GRVeqO1CmBe4XRkGZ1vIswrtQoA+GqEbHkukC1yasRhAuIwgDmFvrGyp31RCy5dWwCAM9fLH8Wcp4DOA4jMWHdRtsi1mfUAQDPIWPVJRqmC5a8lgAYPAdn6raHBsx4APLXFmlBIgifb1gOAx1vLHi382167ABI5O0e1NEZj63yMRtPW7zkDE0s9sNln9Y57NODcDdwuWjdwTx1AIsu3o5wcWJE3yX8AfCM+Ep86GikAAAAASUVORK5CYII="
-LONGHORN_26 = "iVBORw0KGgoAAAANSUhEUgAAABoAAAANCAIAAAA4++m6AAABX0lEQVR42qWSPUvDUBSGn6bXtIlWLeIHIgjFRVCwgyAFJ0fBpb+guKmrmyCCf8HRxU3cBFs6OAnWURBRQUoF8aNSilKT1N4mDkZrayRKz/Tyvvc+95zLCawnGNQJCU6L7F9z88K/arSbhTGmBqhKHo1PN6KSmiCTZHWa3tCfQL0hVqfJJElNEFFdM/D9RKyH9QTRMNtnHOSRNrpgLIq0AYTCdRlDIhTmYyxOUrbYOCb/3CAEWt7UBEtx5mOYNZ5MBnXCopFakkeDfg2tg91Lds4xZdP1gOcgsyOszaAGvcd8q7N5wtGtR6T8tDTBShw1SNGgWm+KqnWKBmqQlTia8MB5dycU+nUeXtmaY7yv4V+UWD5kqJMnw/1Q/+4AaXNfwXHIFpr8bAHH4b7izfoV91XpPCXT1SWTdN5ne3xwNZvcnatzd9Ts9nAfG94i2sINd7WKtnB7V1gSS7J35Y97B/UHbSsWm824AAAAAElFTkSuQmCC"
-LONGHORN_26_WHITE = "iVBORw0KGgoAAAANSUhEUgAAABoAAAANCAIAAAA4++m6AAABp0lEQVR42mN8eWwlh6g8MxvXh2sHnu2Z8fXJNQZSALeMlpRLhoCWw99f3368fsi4P5yBgYGBlUdI2jNf1qf41bEV95ZX/v70mqBBrHyiSpHtYlYRj7f0Pt0+8feXdwwMDFDjoFbJ6WoXrGLlE3uwqvb5vjn//vxi5uTlVTD89+cXAwMDEwvb5wfn/37/zMTCJumUohDW/PvTq6sTwr4+ugw3AcU4BgYGZg4eldg+SaeUPz8+/3r3lF1EjpmdGy779+fXn28esQlJs3DwPt7S82Bt098fX5C1oxsHASKmgVp5y5hYObB689/vH9cmRb05vR5TiglTiJmDRyV+AhMrx8+3j//9+o5i0K/vP98+ZmLlUImfwMzBg6kXu+sYmVk5hGV/vH5g2HyMT8UcLv7pzsnztVYcogo/3j7+//c3Ua5jYGD4//f391f3/v//9/LQImTxFwcX/v//7/ure1jNwmkcHDzfP/fXh+cQ9q8Pz18cmIdfPQHj/v3++ebsZgj7zdnN/37/pMg4SApHY1BkHIeYEhqDIuOebOv/+/Pr359fn2zrJ6gYAIeHtI11IAsRAAAAAElFTkSuQmCC"
-LOGO_W = 26
-LOGO_H = 13
+LONGHORN_32 = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAQCAIAAAD4YuoOAAABtUlEQVR42q2UTUtbURCGn3OT1IARQzGFxC9U/FqkVKhZSKUI2QhCBXFhf4Cbbm3/RLssLgS3EaSLFgQLLQnSEsEsis0iGlFJr9cIio0m0iTm5nQRSjDmXm8lszvzvjPvzJk5RywG8bkQguQ53zW+pri65t7W7CDYzbN2Bh4iJcc5RAVwNzHRxdwQTjuhBB+SlMr/l9qhMDPAy2HyJVZ2iPwiUwD+CVTMaWf+MdP9qJe8/0HsxGr2MR+vRvC6+LjH0k/ypSokbrPHO3gTwOVgK82nfbQsrU0876TlAVICCEG2yIbKRYH2Fl70EfCSLfI2xrej2myibkXeZl4HGHlktYPPhyzHOftTBxImYZM9LIyimFEoS97FWD80JNiMgKk+Fp7ekb1yXWM+0lfsZwwIRpF2hYlOet3Ez3jiYXawlrC6y/Yp/jYOMkRUw62zGwmUynxJQQrAJuoIxE+JakS1O1pUrMwwqpHO3fCkc2weW5q/JQFdEkrc8IQS6LJxAkBYpSyrmxNWrW6wVYGiXi1ZlxT1Rgv4PTiU6rfj9zRaIFswO5qYzSLvdx63k95WdMnagdnTrbG/SLeK/CQrNvIAAAAASUVORK5CYII="
+LONGHORN_32_WHITE = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAQCAIAAAD4YuoOAAAB7klEQVR42mP8ePsEp7gyAwPjlwfn3pze8PLI0j/fPjKQC1i4+MVtokVMA3gUjBgY/n9/eZdxfzgDAwMDK5+omGW4nH85Mzv3ww3tT7dP/PfnF0lGM7GyS3vkyQdU/v359dHGzlfHV/7+9JqBgQFqAQQws3MrRXVIu2V/e37zzsKCdxd3Emm6sLGvSlw/p5jS011T7y2r+PvzK1wKxQIIEDULUk+fy8It8O7ijme7pn97cZuVV0TMIpSFW5CB4T9E15+v71+dWP378xsuCVUpt0whfY8/X9/fnJny+tQ6NNOwWMDAwMAhpqiRPldA25FIH7w4uOD+ypqf755iSmG3AAIkHBLV02YzMjHjMfr/v783Z6W+ODAfZ9zgkpByTlNPn4PfdAYGBkYmZvX0ORJ2cTjTFS6J5wfm//31jVtW99PNo/xa9rLeRWgKHm/p/Xj9EJ+69dfHl18dW0myBf///n55eAnMn8yYFny8eeTN2U1vzm4ikHyJicO35zZ/f3UPWeT7q3tvz20hKn8Qo+j/3z+PNnYgizza2PH/7x+qWcDAwPD62Mr///7CU85r3IFOpgV/f32HO/n/3z9/f32nsgUCGrZMrOzwYkdAw5bKFvz++g4PlwoWfHl48emuaf9+//j3+8fTXdO+PLxIpEYAttPTXedmbHUAAAAASUVORK5CYII="
+LOGO_W = 32
+LOGO_H = 16
 HEADER_TEXT_W = 64 - LOGO_W - 2  # 1px gutter either side of the mark
 RULE_W = 60
 
@@ -140,11 +140,12 @@ def progress_bar(width, progress, lit_color):
     return render.Row(children = kids)
 
 def header(style, line1, line2, progress):
-    """13-row header plus the 1-row rule under it (14 rows total)."""
+    """16-row header plus the 1-row rule under it (17 rows total). The
+    13-row lockup (5x8 over tom-thumb) is centered in the mark's height."""
     if style == "band":
-        mark, c1, c2, bg = LONGHORN_26_WHITE, WHITE, WHITE, ORANGE
+        mark, c1, c2, bg = LONGHORN_32_WHITE, WHITE, WHITE, ORANGE
     else:
-        mark, c1, c2, bg = LONGHORN_26, ORANGE, WHITE, BLACK
+        mark, c1, c2, bg = LONGHORN_32, ORANGE, WHITE, BLACK
     lockup = render.Column(
         cross_align = "center",
         children = [
@@ -175,15 +176,15 @@ def header(style, line1, line2, progress):
     return render.Column(children = [top, rule])
 
 def count_lockup(big, unit, big_color):
-    """13px count band: 6x13 number with a tb-8 unit on the same baseline
-    (6x13 has a 2px descent, tb-8 1px, hence the 1px pad)."""
-    kids = [render.Text(content = big, font = "6x13", color = big_color)]
+    """10px count band: 6x13 digits trimmed to their 9 rows with a tb-8
+    unit (6 rows) on the same baseline, one blank row above."""
+    kids = [digits9(big, big_color)]
     if unit != "":
         kids.append(render.Box(width = 2, height = 1))
-        kids.append(render.Padding(pad = (0, 0, 0, 1), child = render.Text(content = unit, font = "tb-8", color = DIM)))
+        kids.append(small(unit, DIM))
     return render.Box(
         width = 64,
-        height = 13,
+        height = 10,
         child = render.Row(main_align = "center", cross_align = "end", children = kids),
     )
 
@@ -198,8 +199,8 @@ def footer_marquee(text, color):
     )
 
 def count_big(big, labels, big_color):
-    """18px band: 10x20 digits trimmed to their 13 rows, with a three-line
-    label column (tb-8 + two tom-thumb lines) hung off the same baseline."""
+    """15px band: 10x20 digits trimmed to their 13 rows, with a two-line
+    label column (tb-8 over tom-thumb) hung off the same baseline."""
     number = render.Text(content = big, font = "10x20", height = 13, offset = -4, color = big_color)
     kids = [number]
     if len(labels) > 0:
@@ -211,7 +212,7 @@ def count_big(big, labels, big_color):
         kids.append(render.Column(children = lines))
     return render.Box(
         width = 64,
-        height = 18,
+        height = 15,
         child = render.Row(main_align = "center", cross_align = "end", children = kids),
     )
 
@@ -276,11 +277,11 @@ def main(config):
         hero_right = [month_day, year, "MBA"]
         if unit == "weeks" and days >= 7:
             big, unit_text = "%dW %dD" % (days // 7, days % 7), ""
-            big_num, labels = str(days // 7), ["WEEKS", "%d DAYS" % (days % 7), "TO GO"]
+            big_num, labels = str(days // 7), ["WEEKS", "%d DAYS" % (days % 7)]
             hero_big, hero_sub = "%dW" % (days // 7), "%d DAYS" % (days % 7)
         else:
             big, unit_text = str(days), ("DAY" if days == 1 else "DAYS")
-            big_num, labels = big, [unit_text, month_day, year]
+            big_num, labels = big, [unit_text, month_day]
             hero_big, hero_sub = big, unit_text
     elif days == 0:
         big_color = ORANGE
@@ -291,7 +292,7 @@ def main(config):
     else:
         big_color = ORANGE
         big, unit_text = "MBA", "DONE"
-        big_num, labels = "DONE", ["MBA", month_day, year]
+        big_num, labels = "DONE", ["MBA", year]
         hero_big, hero_sub, hero_right = "MBA", "DONE", ["CLASS", "OF", year]
         lines = ["CLASS OF " + year, "HOOK 'EM HORNS"]
 

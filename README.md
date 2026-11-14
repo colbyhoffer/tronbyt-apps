@@ -82,9 +82,9 @@ Layouts:
 
 - **Hero** (default) — the Longhorn fills the whole panel, horn tips in the corners; the count sits in the
   open space left of the face, the date and `MBA` to the right
-- **Lockup** — 13-row header (Longhorn + TEXAS / McCombs), the count in 6x13 with `DAYS`, and a footer that
-  alternates between `UNTIL GRADUATION` and the date
-- **Big Number** — same header, the count in 10x20 with a `DAYS / MAY 7 / 2027` label column
+- **Lockup** — 16-row header (Longhorn 32x16 + TEXAS / McCombs), the count in 6x13 with `DAYS`, and a
+  footer that alternates between `UNTIL GRADUATION` and the date
+- **Big Number** — same header, the count in 10x20 with a `DAYS / MAY 7` label column
 
 Header style for Lockup and Big Number: **Burnt orange band** (white Longhorn and lockup on orange) or
 **Line on black**. Set a **Program Start** date and a progress bar shows how far through the program you are
