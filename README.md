@@ -71,3 +71,17 @@ pixlet serve apps/readwise_quote/readwise_quote.star
 ```
 
 Renders live at http://localhost:8080 with a config form.
+
+### MBA Countdown (`apps/mba_countdown`)
+
+Counts down the calendar days to McCombs MBA graduation (default **May 7, 2027**) on the 64x32 display:
+a pixel Longhorn silhouette and a TEXAS / McCombs lockup in burnt orange across the top, the count
+big in the middle (`175 DAYS`, or `25W 0D` in weeks mode), and a footer that alternates between
+`UNTIL GRADUATION` and the date. On the day it switches to `TODAY!` / `HOOK 'EM HORNS`, and
+afterwards to `MBA DONE` with the class year.
+
+Days are counted in the device's timezone, so the number rolls over at midnight. The Longhorn is
+drawn from `render.Box` runs and follows the accent color.
+
+Options: graduation date (`YYYY-MM-DD`), event name (long names scroll), days vs. weeks + days,
+the two header lines, accent color. No API key needed.

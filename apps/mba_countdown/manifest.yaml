@@ -1,0 +1,12 @@
+id: mba_countdown
+name: MBA Countdown
+summary: Days until McCombs graduation
+desc: Counts down the calendar days to graduation (default May 7, 2027) under a pixel Longhorn and a TEXAS / McCombs lockup in burnt orange. Footer alternates between the event name and the date; switches to TODAY! and HOOK 'EM HORNS on the day.
+author: colbyhoffer
+fileName: mba_countdown.star
+packageName: mba_countdown
+category: lifestyle
+tags:
+  - countdown
+  - texas
+  - mba
