@@ -61,6 +61,35 @@ Options: max quote length, scroll speed, accent color. Demo quote when no token 
 Setup: copy your token from [readwise.io/access_token](https://readwise.io/access_token)
 and paste it into the app settings.
 
+### Oura (`apps/oura`)
+
+Shows your [Oura Ring](https://ouraring.com) data, signed in through the Tronbyt server's OAuth client
+(Oura retired personal access tokens in late 2025, so the community `ouraring` app no longer works).
+
+Views (pick one, or **Rotate through all**, one per render):
+
+- **Dashboard** — Sleep / Readiness / Activity scores side by side with tier-colored bars, last night's
+  sleep length, today's steps, and whether the data is from today or yesterday
+- **Sleep** — time asleep, efficiency, HRV, bedtime window, a deep/REM/light/awake stage bar, lowest HR
+- **Readiness** — score, temperature deviation, resting HR, and the four contributors that move it most
+- **Activity** — steps, progress toward the calorie goal, active calories, distance (mi/km), active minutes
+- **7-day trend** — one score as bars for the last week
+
+Scores use Oura's tiers: 85+ optimal (teal), 70–84 good (blue), under 70 pay attention (orange).
+Data comes from the v2 `daily_sleep`, `daily_readiness`, `daily_activity` and `sleep` collections, cached
+15 min. Demo data renders when not signed in.
+
+Setup (needs a Tronbyt server build with **Settings → OAuth Clients**, merged Nov 2026):
+
+1. Settings → OAuth Clients → New. Copy the redirect URI it shows (don't reload the page afterwards).
+2. Create an app at [cloud.ouraring.com/oauth/applications](https://cloud.ouraring.com/oauth/applications)
+   with that redirect URI and all scopes ticked. Copy the client ID and secret.
+3. Back in Tronbyt: name `Oura`, authorization endpoint `https://cloud.ouraring.com/oauth/authorize`,
+   token endpoint `https://api.ouraring.com/oauth/token`, plus the client ID and secret. Save.
+4. Install the app and press **Sign in** on its config page.
+
+For local `pixlet serve` there is an "Access token (manual)" field.
+
 ## Development
 
 
@@ -68,6 +97,7 @@ and paste it into the app settings.
 pixlet serve apps/setlist/setlist.star
 pixlet serve apps/tceq_alerts/tceq_alerts.star
 pixlet serve apps/readwise_quote/readwise_quote.star
+pixlet serve apps/oura/oura.star
 ```
 
 Renders live at http://localhost:8080 with a config form.

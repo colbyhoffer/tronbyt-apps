@@ -1,0 +1,12 @@
+id: oura
+name: Oura
+summary: Oura Ring scores and sleep
+desc: Shows your Oura sleep, readiness and activity scores, last night's sleep breakdown, today's activity, or a 7-day trend. Signs in through the Tronbyt server's OAuth client.
+author: colbyhoffer
+fileName: oura.star
+packageName: oura
+category: lifestyle
+tags:
+  - health
+  - sleep
+  - oura
