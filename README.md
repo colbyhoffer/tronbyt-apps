@@ -145,7 +145,7 @@ America and Chase a column wider each.
 Each building is a small builder that returns its strokes for a given left edge, so the two layouts just
 place them. Everything is drawn into a pixel grid with Bresenham lines and flushed as `render.Box` runs,
 with the strokes kept in drawing order so the optional **draw-in animation** sketches the skyline in from
-left to right (~3 s) before holding. **Window lights** adds dim warm windows that twinkle on their own
+left to right (~3 s) before holding. **Window lights** adds sparse dim warm windows that twinkle on their own
 staggered schedules (deterministic hash, no `random`).
 
 Options: bridge on/off, line color, Bank of America green on/off, draw-in animation, window lights, and a

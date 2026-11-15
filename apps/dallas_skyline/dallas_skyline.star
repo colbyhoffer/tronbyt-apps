@@ -22,7 +22,7 @@ Options
   Bank of America green  outline that tower in green instead
   Draw-in animation      the skyline sketches itself in from left to
                          right over ~3 s, then holds
-  Window lights          dim warm windows that slowly twinkle
+  Window lights          sparse dim warm windows that slowly twinkle
   Label                  up to 6 characters top right, e.g. DALLAS
 
 Rendering: each building is a small builder that returns its strokes
@@ -43,6 +43,7 @@ BLACK = "#000000"
 DEFAULT_COLOR = "#e0e0e0"
 ARGON_GREEN = "#2ee68a"  # Bank of America Plaza's argon outline
 WINDOW = "#8a6f2a"  # dim warm window light
+WINDOW_COL_STEP = 3  # columns between windows; 2 crowds the outlines
 
 FRAME_MS = 80
 DRAW_PX_PER_FRAME = 12  # draw-in speed (~3 s for the whole skyline)
@@ -257,7 +258,7 @@ def skyline_pixels(strokes, line_color, boa_color):
     return out
 
 def window_pixels(outline, areas, hole):
-    """Candidate window pixels: every other cell inside each tower, off the lines."""
+    """Candidate window pixels: a sparse grid inside each tower, off the lines."""
     on_line = {}
     for x, y, _ in outline:
         on_line[y * W + x] = True
@@ -268,11 +269,14 @@ def window_pixels(outline, areas, hole):
                 dark[y * W + x] = True
     wins = []
     for x0, y0, x1, y1 in areas:
+        # every other row, every third column, columns centered in the tower
+        cols = (x1 - x0) // WINDOW_COL_STEP + 1
+        lead = (x1 - x0 + 1 - (WINDOW_COL_STEP * (cols - 1) + 1)) // 2
         for y in range(y0, y1 + 1):
             if (y - y0) % 2 != 0:
                 continue
-            for x in range(x0, x1 + 1):
-                if (x - x0) % 2 != 0:
+            for x in range(x0 + lead, x1 + 1):
+                if (x - x0 - lead) % WINDOW_COL_STEP != 0:
                     continue
                 key = y * W + x
                 if key in on_line or key in dark:
