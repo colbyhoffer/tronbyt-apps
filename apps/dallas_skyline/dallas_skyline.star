@@ -6,11 +6,11 @@ Line-art skyline of downtown Dallas on the 64x32 display, as seen from
 the southwest: one-pixel outlines on black, left to right
 
   Reunion Tower          geodesic ball on twin shafts, antenna on top
-  Hyatt Regency          the low block beside it
+  Hyatt Regency          the stepped slab beside it
   Bank of America Plaza  the tallest, notched top corners, drawn in its
                          argon green by default
   Renaissance Tower      crown of spires and the two X-braces
-  Comerica Bank Tower    setback and barrel-vault cap
+  Comerica Bank Tower    two setbacks under a barrel-vault cap
   Chase Tower            vaulted top with the keyhole cut through it
   Fountain Place         the glass prism, slanted top and a fold line
 
@@ -77,8 +77,8 @@ STROKES = [
     ("ring", [(5, 18)]),
     ("", [(5, 14), (5, 13)]),
 
-    # Hyatt Regency
-    ("", [(10, GROUND), (10, 20), (13, 20), (13, GROUND)]),
+    # Hyatt Regency: stepped slab, taller half toward Reunion
+    ("", [(10, GROUND), (10, 18), (11, 18), (11, 21), (13, 21), (13, GROUND)]),
 
     # Bank of America Plaza: notched top corners
     ("boa", [(15, GROUND), (15, 6), (16, 6), (16, 4), (23, 4), (23, 6), (24, 6), (24, GROUND)]),
@@ -93,8 +93,8 @@ STROKES = [
     ("", [(26, 15), (34, 23)]),
     ("", [(34, 15), (26, 23)]),
 
-    # Comerica Bank Tower: setback and barrel vault
-    ("", [(36, GROUND), (36, 13), (37, 13), (37, 10), (38, 9), (39, 8), (40, 8), (41, 9), (42, 10), (42, 13), (43, 13), (43, GROUND)]),
+    # Comerica Bank Tower: two setbacks and a barrel vault
+    ("", [(36, GROUND), (36, 15), (37, 15), (37, 12), (38, 12), (38, 10), (39, 9), (39, 8), (40, 8), (40, 9), (41, 10), (41, 12), (42, 12), (42, 15), (43, 15), (43, GROUND)]),
 
     # Chase Tower: vaulted top, keyhole
     ("", [(45, GROUND), (45, 12), (46, 11), (47, 10), (48, 9), (52, 9), (53, 10), (54, 11), (55, 12), (55, GROUND)]),

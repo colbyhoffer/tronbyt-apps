@@ -135,9 +135,9 @@ days vs. weeks + days, program start, the two header lines. No API key needed.
 ### Dallas Skyline (`apps/dallas_skyline`)
 
 One-pixel line art of downtown Dallas on the 64x32 display, seen from the southwest. Left to right:
-Reunion Tower (ball on twin shafts, antenna), the Hyatt Regency, Bank of America Plaza (tallest, notched
+Reunion Tower (ball on twin shafts, antenna), the stepped Hyatt Regency, Bank of America Plaza (tallest, notched
 top corners, drawn in its argon green), Renaissance Tower (crown of spires and the two X-braces),
-Comerica Bank Tower (setback and barrel-vault cap), Chase Tower (vaulted top with the keyhole), and
+Comerica Bank Tower (two setbacks under a barrel-vault cap), Chase Tower (vaulted top with the keyhole), and
 Fountain Place (the glass prism, slanted top with a fold line).
 
 Everything is drawn into a pixel grid with Bresenham lines and flushed as `render.Box` runs, with the
