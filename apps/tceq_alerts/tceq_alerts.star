@@ -50,6 +50,7 @@ SPRITE_FRAMES = [
     "iVBORw0KGgoAAAANSUhEUgAAABQAAAAgCAYAAAASYli2AAABUUlEQVR4nN2VMU+DQBTHf2DTpe5log0jph1l9ks4uHbqV/BzuDi4kn4Ik85dEQkuTXUwpYOTLCbmHMiZFu7wCujgPyEvvLv88of33h38e23HvugUJq4RRlA3iIR86mDi9eoA2tPBkuUEgDjNuJxH4mU1tUxc2yabVHI2iZWFPgBZ6ONsEqsVEOB8uIC3sIhtHeqkBQ7WFoO1RdB3lOuyWKNZdPDe2KEsUjkqqwyQe0W3xGkG7LTgclvZMlnXcyZOpXqqnjsGqHTYRhWHUFQUIOgDREcBlQ5zT5B7gtXH9nvhp7bROWz9ycb/UOVapc4cSmfl2Aio61c3iIR2Uupgz3dT5dpoFulHr05yLPclR7Tz46uRw3f/rJIbAwwXzYCnyWMlF6cZzHcF0L94qGwo59zA7KKyAZLlhM+T29poqt8rytP9TW3cV9EiallNTuk/1RdWjLZOJeO+GwAAAABJRU5ErkJggg==",
 ]
 FLAME_HOLD = 3  # root frames per flame frame
+PAUSE_MS = 1200  # hold before each marquee starts scrolling
 TEXT_X = SPRITE_W + 1
 TEXT_W = 64 - TEXT_X
 HEADER_FULL = "TCEQ ALERT"
@@ -304,13 +305,18 @@ def header(pos, total, accent):
     )
 
 def marquee(text, font, color, delay, height):
+    """Text that pauses briefly, scrolls off to the left, scrolls back in
+    from the right and then holds at its start. Marquee.delay is counted
+    in frames, so derive it from the per-frame delay in ms. offset_end=0
+    makes the final (frozen) frame show the start of the text rather than
+    an empty box, so short lines stay visible while longer ones scroll."""
     return render.Marquee(
         width = TEXT_W,
         height = height,
         scroll_direction = "horizontal",
         offset_start = 0,
-        offset_end = TEXT_W,
-        delay = delay,
+        offset_end = 0,
+        delay = int(PAUSE_MS / delay),
         child = render.Text(text, font = font, color = color),
     )
 
