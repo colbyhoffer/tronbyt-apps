@@ -5,8 +5,8 @@ Dallas Skyline for Tronbyt/Tidbyt
 Line-art skyline of downtown Dallas on the 64x32 display, as seen from
 the southwest: one-pixel outlines on black, left to right
 
+  Margaret Hunt Hill Bridge  arch, crossed cables, deck on piers
   Reunion Tower          geodesic ball on twin shafts, antenna on top
-  Hyatt Regency          the stepped slab beside it
   Bank of America Plaza  the tallest, notched top corners, drawn in its
                          argon green by default
   Renaissance Tower      crown of spires and the two X-braces
@@ -15,6 +15,9 @@ the southwest: one-pixel outlines on black, left to right
   Fountain Place         the glass prism, slanted top and a fold line
 
 Options
+  Bridge                 on by default; off swaps it for the Hyatt Regency
+                         (stepped slab beside Reunion) and widens Bank of
+                         America and Chase by a column each
   Line color             any color; the default is a soft white
   Bank of America green  outline that tower in green instead
   Draw-in animation      the skyline sketches itself in from left to
@@ -22,10 +25,11 @@ Options
   Window lights          dim warm windows that slowly twinkle
   Label                  up to 6 characters top right, e.g. DALLAS
 
-Rendering: everything is drawn into a 64x32 grid of color strings with
-Bresenham lines and flushed as rows of render.Box runs. Each stroke is
-a polyline, kept in drawing order so the draw-in animation reveals the
-pixels the way a pen would lay them down.
+Rendering: each building is a small builder that returns its strokes
+(polylines) for a given left edge; layout() places them. Everything is
+drawn into a 64x32 grid of color strings with Bresenham lines and
+flushed as rows of render.Box runs. Strokes stay in drawing order so the
+draw-in animation reveals the pixels the way a pen would lay them down.
 """
 
 load("render.star", "render")
@@ -65,56 +69,141 @@ RING = [
     (-1, -3),
 ]
 
-# The skyline as strokes: (tag, polyline points). Tag "boa" is the Bank of
-# America Plaza; everything else is tag "". Order is drawing order.
-STROKES = [
-    # ground line
-    ("", [(0, GROUND), (63, GROUND)]),
+# ---------------------------------------------------------------------------
+# Buildings
+#
+# Each builder takes the x of its left edge and returns a dict with
+#   strokes  list of (tag, polyline) in drawing order; tag "boa" is the
+#            Bank of America Plaza, "ring" is Reunion's ball
+#   windows  (x0, y0, x1, y1) interiors that get window lights
+#   hole     interior of the Chase keyhole, kept dark
+# The two layouts below place them.
+# ---------------------------------------------------------------------------
 
-    # Reunion Tower: shafts, ball (filled in below), antenna
-    ("", [(4, GROUND), (4, 22)]),
-    ("", [(6, GROUND), (6, 22)]),
-    ("ring", [(5, 18)]),
-    ("", [(5, 14), (5, 13)]),
+def bridge(x):
+    """Margaret Hunt Hill Bridge, 9 wide: deck, arch, crossed cables, piers."""
+    return dict(
+        strokes = [
+            ("", [(x, 27), (x + 8, 27)]),
+            ("", [(x, 27), (x, 24), (x + 1, 23), (x + 1, 21), (x + 2, 20), (x + 2, 19), (x + 3, 18), (x + 4, 17), (x + 5, 18), (x + 6, 19), (x + 6, 20), (x + 7, 21), (x + 7, 23), (x + 8, 24), (x + 8, 27)]),
+            ("", [(x + 2, 20), (x + 6, 26)]),
+            ("", [(x + 6, 20), (x + 2, 26)]),
+            ("", [(x, 28), (x, 30)]),
+            ("", [(x + 8, 28), (x + 8, 30)]),
+        ],
+        windows = [],
+    )
 
-    # Hyatt Regency: stepped slab, taller half toward Reunion
-    ("", [(10, GROUND), (10, 18), (11, 18), (11, 21), (13, 21), (13, GROUND)]),
+def reunion(x):
+    """Reunion Tower, 7 wide: twin shafts, ball, antenna."""
+    c = x + 3
+    return dict(
+        strokes = [
+            ("", [(c - 1, GROUND), (c - 1, 22)]),
+            ("", [(c + 1, GROUND), (c + 1, 22)]),
+            ("ring", [(c, 18)]),
+            ("", [(c, 14), (c, 13)]),
+        ],
+        windows = [],
+    )
 
-    # Bank of America Plaza: notched top corners
-    ("boa", [(15, GROUND), (15, 6), (16, 6), (16, 4), (23, 4), (23, 6), (24, 6), (24, GROUND)]),
+def hyatt(x):
+    """Hyatt Regency, 4 wide: stepped slab, taller half toward Reunion."""
+    return dict(
+        strokes = [("", [(x, GROUND), (x, 18), (x + 1, 18), (x + 1, 21), (x + 3, 21), (x + 3, GROUND)])],
+        windows = [(x + 1, 22, x + 2, 29)],
+    )
 
-    # Renaissance Tower: body, crown of spires, two X-braces
-    ("", [(26, GROUND), (26, 5), (34, 5), (34, GROUND)]),
-    ("", [(28, 4), (28, 3)]),
-    ("", [(30, 4), (30, 1)]),
-    ("", [(32, 4), (32, 3)]),
-    ("", [(26, 7), (34, 15)]),
-    ("", [(34, 7), (26, 15)]),
-    ("", [(26, 15), (34, 23)]),
-    ("", [(34, 15), (26, 23)]),
+def boa(x, w):
+    """Bank of America Plaza, w wide: the tallest, notched top corners."""
+    r = x + w - 1
+    return dict(
+        strokes = [("boa", [(x, GROUND), (x, 6), (x + 1, 6), (x + 1, 4), (r - 1, 4), (r - 1, 6), (r, 6), (r, GROUND)])],
+        windows = [(x + 1, 6, r - 1, 29)],
+    )
 
-    # Comerica Bank Tower: two setbacks and a barrel vault
-    ("", [(36, GROUND), (36, 15), (37, 15), (37, 12), (38, 12), (38, 10), (39, 9), (39, 8), (40, 8), (40, 9), (41, 10), (41, 12), (42, 12), (42, 15), (43, 15), (43, GROUND)]),
+def renaissance(x):
+    """Renaissance Tower, 9 wide: body, crown of spires, two X-braces."""
+    r = x + 8
+    c = x + 4
+    return dict(
+        strokes = [
+            ("", [(x, GROUND), (x, 5), (r, 5), (r, GROUND)]),
+            ("", [(c - 2, 4), (c - 2, 3)]),
+            ("", [(c, 4), (c, 1)]),
+            ("", [(c + 2, 4), (c + 2, 3)]),
+            ("", [(x, 7), (r, 15)]),
+            ("", [(r, 7), (x, 15)]),
+            ("", [(x, 15), (r, 23)]),
+            ("", [(r, 15), (x, 23)]),
+        ],
+        windows = [(x + 1, 7, r - 1, 29)],
+    )
 
-    # Chase Tower: vaulted top, keyhole
-    ("", [(45, GROUND), (45, 12), (46, 11), (47, 10), (48, 9), (52, 9), (53, 10), (54, 11), (55, 12), (55, GROUND)]),
-    ("", [(48, 12), (52, 12), (52, 17), (48, 17), (48, 12)]),
+def comerica(x):
+    """Comerica Bank Tower, 8 wide: two setbacks under a barrel vault."""
+    return dict(
+        strokes = [("", [
+            (x, GROUND),
+            (x, 15),
+            (x + 1, 15),
+            (x + 1, 12),
+            (x + 2, 12),
+            (x + 2, 10),
+            (x + 3, 9),
+            (x + 3, 8),
+            (x + 4, 8),
+            (x + 4, 9),
+            (x + 5, 10),
+            (x + 5, 12),
+            (x + 6, 12),
+            (x + 6, 15),
+            (x + 7, 15),
+            (x + 7, GROUND),
+        ])],
+        windows = [(x + 1, 12, x + 6, 29)],
+    )
 
-    # Fountain Place: wedge prism with a fold line
-    ("", [(57, GROUND), (57, 16), (63, 10), (63, GROUND)]),
-    ("", [(60, 13), (60, GROUND)]),
-]
+def chase(x, w):
+    """Chase Tower, 10 or 11 wide: vaulted top with the keyhole through it."""
+    r = x + w - 1
+    hx0 = x + 3
+    hx1 = r - 3
+    return dict(
+        strokes = [
+            ("", [(x, GROUND), (x, 12), (x + 1, 11), (x + 2, 10), (x + 3, 9), (r - 3, 9), (r - 2, 10), (r - 1, 11), (r, 12), (r, GROUND)]),
+            ("", [(hx0, 12), (hx1, 12), (hx1, 17), (hx0, 17), (hx0, 12)]),
+        ],
+        windows = [(x + 1, 12, r - 1, 29)],
+        hole = (hx0 + 1, 13, hx1 - 1, 16),
+    )
 
-# Interiors that get window lights: (x0, y0, x1, y1) inclusive, inset from
-# the outlines. Windows sit on every other row and column.
-WINDOW_AREAS = [
-    (11, 22, 12, 29),  # Hyatt
-    (16, 6, 23, 29),  # Bank of America
-    (27, 7, 33, 29),  # Renaissance
-    (37, 12, 42, 29),  # Comerica
-    (46, 12, 54, 29),  # Chase
-    (58, 16, 62, 29),  # Fountain Place
-]
+def fountain(x):
+    """Fountain Place, 7 wide: wedge prism with a fold line."""
+    return dict(
+        strokes = [
+            ("", [(x, GROUND), (x, 16), (x + 6, 10), (x + 6, GROUND)]),
+            ("", [(x + 3, 13), (x + 3, GROUND)]),
+        ],
+        windows = [(x + 1, 16, x + 5, 29)],
+    )
+
+def layout(with_bridge):
+    """The skyline left to right. With the bridge, Bank of America and Chase
+    give up a column each and the Hyatt steps aside to make room for it."""
+    if with_bridge:
+        parts = [bridge(0), reunion(10), boa(18, 8), renaissance(27), comerica(37), chase(46, 10), fountain(57)]
+    else:
+        parts = [reunion(2), hyatt(10), boa(15, 10), renaissance(26), comerica(36), chase(45, 11), fountain(57)]
+    strokes = [("", [(0, GROUND), (63, GROUND)])]
+    windows = []
+    hole = None
+    for part in parts:
+        strokes.extend(part["strokes"])
+        windows.extend(part["windows"])
+        if "hole" in part:
+            hole = part["hole"]
+    return strokes, windows, hole
 
 # ---------------------------------------------------------------------------
 # Geometry -> ordered pixel list
@@ -143,11 +232,11 @@ def line_points(x0, y0, x1, y1):
             y += sy
     return pts
 
-def skyline_pixels(line_color, boa_color):
+def skyline_pixels(strokes, line_color, boa_color):
     """All outline pixels as (x, y, color), in drawing order, no repeats."""
     out = []
     seen = {}
-    for tag, pts in STROKES:
+    for tag, pts in strokes:
         color = boa_color if tag == "boa" else line_color
         if tag == "ring":
             cx, cy = pts[0]
@@ -167,17 +256,18 @@ def skyline_pixels(line_color, boa_color):
             out.append((x, y, color))
     return out
 
-def window_pixels(outline):
+def window_pixels(outline, areas, hole):
     """Candidate window pixels: every other cell inside each tower, off the lines."""
     on_line = {}
     for x, y, _ in outline:
         on_line[y * W + x] = True
-    hole = {}
-    for y in range(13, 17):  # inside the Chase keyhole
-        for x in range(49, 52):
-            hole[y * W + x] = True
+    dark = {}
+    if hole:
+        for y in range(hole[1], hole[3] + 1):
+            for x in range(hole[0], hole[2] + 1):
+                dark[y * W + x] = True
     wins = []
-    for x0, y0, x1, y1 in WINDOW_AREAS:
+    for x0, y0, x1, y1 in areas:
         for y in range(y0, y1 + 1):
             if (y - y0) % 2 != 0:
                 continue
@@ -185,7 +275,7 @@ def window_pixels(outline):
                 if (x - x0) % 2 != 0:
                     continue
                 key = y * W + x
-                if key in on_line or key in hole:
+                if key in on_line or key in dark:
                     continue
                 wins.append((x, y))
     return wins
@@ -247,9 +337,10 @@ def main(config):
     lights = config.bool("lights", False)
     label = config.str("label", "").strip().upper()[:6]
 
-    outline = skyline_pixels(line_color, boa_color)
+    strokes, areas, hole = layout(config.bool("bridge", True))
+    outline = skyline_pixels(strokes, line_color, boa_color)
     total = len(outline)
-    windows = window_pixels(outline) if lights else []
+    windows = window_pixels(outline, areas, hole) if lights else []
 
     frames = []
     if draw_in:
@@ -300,6 +391,13 @@ def get_schema():
                 desc = "Color of the outlines.",
                 icon = "palette",
                 default = DEFAULT_COLOR,
+            ),
+            schema.Toggle(
+                id = "bridge",
+                name = "Margaret Hunt Hill Bridge",
+                desc = "Show the bridge left of Reunion Tower. Off puts the Hyatt Regency back in its place.",
+                icon = "archway",
+                default = True,
             ),
             schema.Toggle(
                 id = "boa_green",
