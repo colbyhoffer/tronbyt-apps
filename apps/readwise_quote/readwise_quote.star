@@ -347,18 +347,25 @@ def quote_body(quote, accent, height, width):
         rows.append(render.Box(width = width, height = 3))
         rows.extend(attribution)
 
-    # A marquee only scrolls when the child is taller than the viewport,
-    # so short quotes sit still. Long ones enter from below the display
-    # (offset_start = height), roll off the top and loop; offset_end =
-    # height drops pixlet's default "scroll back in and freeze" tail.
+    # A marquee never animates a child that fits the viewport, so stack
+    # the text over an invisible box one pixel taller than the viewport:
+    # short quotes then scroll like long ones. Every quote enters from
+    # below the display (offset_start = height), rolls off the top and
+    # loops; offset_end = height drops pixlet's default "scroll back in
+    # and freeze" tail.
     return render.Marquee(
         height = height,
         offset_start = height,
         offset_end = height,
         scroll_direction = "vertical",
-        child = render.Padding(
-            pad = (1, 0, 1, 0),
-            child = render.Column(children = rows),
+        child = render.Stack(
+            children = [
+                render.Box(width = width + 2, height = height + 1),
+                render.Padding(
+                    pad = (1, 0, 1, 0),
+                    child = render.Column(children = rows),
+                ),
+            ],
         ),
     )
 

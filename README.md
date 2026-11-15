@@ -43,7 +43,7 @@ No API key needed.
 ### Readwise Quote (`apps/readwise_quote`)
 
 Shows one of your [Readwise](https://readwise.io) highlights: the quote wrapped and scrolling
-vertically, followed by the book title and author. Short quotes sit still; long ones roll through.
+vertically, followed by the book title and author. Every quote scrolls in from the bottom of the display and off the top.
 
 Sources:
 
