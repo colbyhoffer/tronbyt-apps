@@ -68,13 +68,18 @@ Shows your [Oura Ring](https://ouraring.com) data, signed in through the Tronbyt
 
 Views (pick one, or **Rotate through all**, one per render):
 
-- **Dashboard** — Sleep / Readiness / Activity scores side by side with tier-colored bars, last night's
-  sleep length, today's steps, and whether the data is from today or yesterday
-- **Sleep** — time asleep, efficiency, HRV, bedtime window, a deep/REM/light/awake stage bar, lowest HR
-- **Readiness** — score, temperature deviation, resting HR, and the four contributors that move it most
-- **Activity** — steps, progress toward the calorie goal, active calories, distance (mi/km), active minutes
-- **7-day trend** — one score as bars for the last week
+- **Dashboard** — three score rings (Sleep / Ready / Move) with the number inside, last night's sleep
+  length, today's steps, and a TODAY / YDAY stamp so you can tell whether the ring has synced
+- **Sleep** — time asleep in big digits, an overnight heart-rate sparkline with the low point in white,
+  a hypnogram (awake / REM / light / deep from `sleep_phase_5_min`), HRV and the bed window
+- **Readiness** — 17px score ring, temperature deviation, and sleep / HRV / resting-HR / temperature
+  contributor bars each colored by their own tier
+- **Activity** — score ring, steps, calorie-goal bar, distance (mi/km), and a movement-through-the-day
+  profile built from `class_5_min` with the current column in white
+- **7-day trend** — one score as bars with a dashed weekly-mean line; past days dimmed, today bright
 
+Everything is drawn into a 64x32 pixel buffer with built-in 3x5 and 5x9 fonts and flushed as
+`render.Box` runs, so layouts land exactly where the design puts them.
 Scores use Oura's tiers: 85+ optimal (teal), 70–84 good (blue), under 70 pay attention (orange).
 Data comes from the v2 `daily_sleep`, `daily_readiness`, `daily_activity` and `sleep` collections, cached
 15 min. Demo data renders when not signed in.
