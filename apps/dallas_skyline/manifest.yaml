@@ -1,0 +1,12 @@
+id: dallas_skyline
+name: Dallas Skyline
+summary: Downtown Dallas in line art
+desc: One-pixel line art of the downtown Dallas skyline, Reunion Tower to Fountain Place, with Bank of America Plaza in its argon green. Optional draw-in animation, twinkling window lights, and a small label.
+author: colbyhoffer
+fileName: dallas_skyline.star
+packageName: dallas_skyline
+category: art
+tags:
+  - dallas
+  - skyline
+  - art

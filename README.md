@@ -131,3 +131,19 @@ glyph rows with `render.Text(height, offset)` so no rows go to blank descender l
 
 Options: graduation date (`YYYY-MM-DD`), layout, header style, event name (long names scroll),
 days vs. weeks + days, program start, the two header lines. No API key needed.
+
+### Dallas Skyline (`apps/dallas_skyline`)
+
+One-pixel line art of downtown Dallas on the 64x32 display, seen from the southwest. Left to right:
+Reunion Tower (ball on twin shafts, antenna), the Hyatt Regency, Bank of America Plaza (tallest, notched
+top corners, drawn in its argon green), Renaissance Tower (crown of spires and the two X-braces),
+Comerica Bank Tower (setback and barrel-vault cap), Chase Tower (vaulted top with the keyhole), and
+Fountain Place (the glass prism, slanted top with a fold line).
+
+Everything is drawn into a pixel grid with Bresenham lines and flushed as `render.Box` runs, with the
+strokes kept in drawing order so the optional **draw-in animation** sketches the skyline in from left to
+right (~3 s) before holding. **Window lights** adds dim warm windows that twinkle on their own
+staggered schedules (deterministic hash, no `random`).
+
+Options: line color, Bank of America green on/off, draw-in animation, window lights, and a label of up to
+6 characters shown top right (e.g. `DALLAS`). No API key needed.
